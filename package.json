@@ -23,6 +23,7 @@
         "@scalar/express-api-reference": "^0.8.34",
         "cors": "^2.8.5",
         "express": "^5.2.1",
+        "pg": "^8.17.1",
         "swagger-ui-express": "^5.0.1",
         "zod": "^4.3.5"
     },
