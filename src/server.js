@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { generateOpenApiDocumentation } from "./config/openapi.js";
 import { apiReference } from "@scalar/express-api-reference";
+import emprestimosRoutes from "./routes/emprestimos.routes.js";
 
 const app = express();
 
@@ -10,9 +11,11 @@ app.use(express.json());
 app.use(
   cors({
     origin: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   }),
 );
+
+app.use("/emprestimos", emprestimosRoutes);
 
 const openApiDocumentation = generateOpenApiDocumentation();
 

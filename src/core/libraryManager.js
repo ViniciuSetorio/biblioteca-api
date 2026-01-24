@@ -88,6 +88,53 @@ const LibraryManager = {
     }
   },
 
+  async listarEmprestimos({ status, usuarioId, livroId } = {}) {
+    const where = [];
+    const values = [];
+    let i = 1;
+
+    if (status) {
+      where.push(`e.status = $${i++}`);
+      values.push(status);
+    }
+    if (usuarioId) {
+      where.push(`e.usuario_id = $${i++}`);
+      values.push(usuarioId);
+    }
+    if (livroId) {
+      where.push(`e.livro_id = $${i++}`);
+      values.push(livroId);
+    }
+
+    const sql = `
+      SELECT
+        e.*,
+        CASE
+          WHEN e.status = 'ativo' AND e.data_devolucao IS NULL AND NOW() > e.data_prevista_devolucao THEN 'atrasado'
+          ELSE e.status
+        END AS status_calculado
+      FROM emprestimos e
+      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+      ORDER BY e.data_emprestimo DESC
+    `;
+
+    const { rows } = await pool.query(sql, values);
+    return rows;
+  },
+
+  async obterEmprestimo({ emprestimoId }) {
+    const { rows, rowCount } = await pool.query(
+      "SELECT * FROM emprestimos WHERE id = $1",
+      [emprestimoId],
+    );
+
+    if (rowCount === 0) {
+      throw new Error("Empréstimo não encontrado");
+    }
+
+    return rows[0];
+  },
+
   async reservarLivro({ usuarioId, livroId }) {
     const client = await pool.connect();
 

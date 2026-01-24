@@ -1,8 +1,10 @@
+import { z } from "zod";
 import {
   OpenAPIRegistry,
   OpenApiGeneratorV3,
+  extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
-
+extendZodWithOpenApi(z);
 export const registry = new OpenAPIRegistry();
 
 export function generateOpenApiDocumentation() {
