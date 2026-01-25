@@ -7,11 +7,3 @@ export const pool = new Pool({
   password: process.env.PGPASSWORD,
   port: process.env.PGPORT,
 });
-
-pool.on("connect", () => {
-  console.log("Conectado ao banco de dados Postgres.");
-});
-
-pool.on("error", (err) => {
-  console.log("Erro ao conectar ao banco de dados Postgres: ", err);
-});
