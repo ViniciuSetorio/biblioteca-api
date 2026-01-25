@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 
-const pool = new Pool({
+export const pool = new Pool({
   user: process.env.PGUSER,
   host: process.env.PGHOST,
   database: process.env.PGDATABASE,
@@ -15,5 +15,3 @@ pool.on("connect", () => {
 pool.on("error", (err) => {
   console.log("Erro ao conectar ao banco de dados Postgres: ", err);
 });
-
-export default pool;

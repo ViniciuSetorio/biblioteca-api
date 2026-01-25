@@ -1,7 +1,7 @@
 {
   "name": "biblioteca-api",
   "version": "1.0.0",
-  "description": "API para um sistema de biblioteca desenvolvidade utilizando de conceitos de singleton - Trabalho para a disciplinha de Engenharia de Software II",
+  "description": "API para um sistema de biblioteca desenvolvida utilizando de conceitos de singleton - Trabalho para a disciplina de Engenharia de Software II",
   "main": "server.js",
   "scripts": {
     "dev": "node --watch --env_file=.env src/server.js",
