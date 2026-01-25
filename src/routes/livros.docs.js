@@ -1,0 +1,245 @@
+import { z } from "zod";
+import { registry } from "../config/openapi.js";
+import {
+  LivroSchema,
+  CriarLivroSchema,
+  AtualizarLivroSchema,
+} from "../schemas/livros.schema.js";
+
+registry.registerPath({
+  method: "get",
+  path: "/livros",
+  description: "Lista todos os livros do catálogo",
+  summary: "Listar livros",
+  tags: ["Livros"],
+  responses: {
+    200: {
+      description: "Lista de livros",
+      content: {
+        "application/json": {
+          schema: z.array(LivroSchema),
+        },
+      },
+    },
+    500: {
+      description: "Erro interno do servidor",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Erro ao buscar livros",
+            }),
+          }),
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/livros/{id}",
+  summary: "Buscar livro por ID",
+  description: "Retorna os dados de um livro específico pelo seu ID",
+  tags: ["Livros"],
+  request: {
+    params: z.object({
+      id: z.number().openapi({
+        description: "ID do livro",
+        example: "1",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Livro encontrado",
+      content: {
+        "application/json": {
+          schema: LivroSchema,
+        },
+      },
+    },
+    404: {
+      description: "Livro não encontrado",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Livro não encontrado",
+            }),
+          }),
+        },
+      },
+    },
+    500: {
+      description: "Erro interno do servidor",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Erro ao buscar livro",
+            }),
+          }),
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/livros",
+  summary: "Cadastrar novo livro",
+  description: "Cria um novo livro no catálogo da biblioteca",
+  tags: ["Livros"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: CriarLivroSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Livro criado com sucesso",
+      content: {
+        "application/json": {
+          schema: LivroSchema,
+        },
+      },
+    },
+    400: {
+      description: "Dados inválidos",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Campos obrigatórios: titulo e autor",
+            }),
+          }),
+        },
+      },
+    },
+    500: {
+      description: "Erro interno do servidor",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Erro ao criar livro",
+            }),
+          }),
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "put",
+  path: "/livros/{id}",
+  description: "Atualiza os dados de um livro",
+  summary: "Atualizar livro",
+  tags: ["Livros"],
+  request: {
+    params: z.object({
+      id: z.number().openapi({
+        description: "ID do livro",
+        example: "1",
+      }),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: AtualizarLivroSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Livro atualizado com sucesso",
+      content: {
+        "application/json": {
+          schema: LivroSchema,
+        },
+      },
+    },
+    404: {
+      description: "Livro não encontrado",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Livro não encontrado",
+            }),
+          }),
+        },
+      },
+    },
+    500: {
+      description: "Erro interno do servidor",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Erro ao atualizar livro",
+            }),
+          }),
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/livros/{id}",
+  summary: "Remover livro",
+  description: "Remove um livro do catálogo pelo ID",
+  tags: ["Livros"],
+  request: {
+    params: z.object({
+      id: z.number().openapi({
+        description: "ID do livro",
+        example: "1",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Livro removido com sucesso",
+      content: {
+        "application/json": {
+          schema: LivroSchema,
+        },
+      },
+    },
+    404: {
+      description: "Livro não encontrado",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Livro não encontrado",
+            }),
+          }),
+        },
+      },
+    },
+    500: {
+      description: "Erro interno do servidor",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Erro ao deletar livro",
+            }),
+          }),
+        },
+      },
+    },
+  },
+});

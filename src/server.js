@@ -3,6 +3,9 @@ import cors from "cors";
 import { generateOpenApiDocumentation } from "./config/openapi.js";
 import { apiReference } from "@scalar/express-api-reference";
 import emprestimosRoutes from "./routes/emprestimos.routes.js";
+import livrosRoutes from "./routes/livros.routes.js";
+
+import "./routes/livros.docs.js";
 
 const app = express();
 
@@ -16,6 +19,7 @@ app.use(
 );
 
 app.use("/emprestimos", emprestimosRoutes);
+app.use("/livros", livrosRoutes);
 
 const openApiDocumentation = generateOpenApiDocumentation();
 
