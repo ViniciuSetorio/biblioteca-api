@@ -1,13 +1,30 @@
+// src/config/openapi.js
 import { z } from "zod";
 import {
   OpenAPIRegistry,
   OpenApiGeneratorV3,
   extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
-extendZodWithOpenApi(z);
-export const registry = new OpenAPIRegistry();
 
-export function generateOpenApiDocumentation() {
+extendZodWithOpenApi(z);
+
+let registryInstance;
+
+function createRegistry() {
+  return new OpenAPIRegistry();
+}
+
+function getRegistry() {
+  if (!registryInstance) {
+    registryInstance = createRegistry();
+  }
+
+  return registryInstance;
+}
+
+function generateOpenApiDocumentation() {
+  const registry = getRegistry();
+
   const generator = new OpenApiGeneratorV3(registry.definitions);
 
   return generator.generateDocument({
@@ -20,3 +37,5 @@ export function generateOpenApiDocumentation() {
     },
   });
 }
+
+export { getRegistry, generateOpenApiDocumentation };
