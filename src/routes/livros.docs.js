@@ -1,10 +1,13 @@
 import { z } from "zod";
-import { registry } from "../config/openapi.js";
+import { getRegistry } from "../config/openapi.js";
 import {
   LivroSchema,
   CriarLivroSchema,
   AtualizarLivroSchema,
 } from "../schemas/livros.schema.js";
+import { ErrorResponseSchema } from "../schemas/error.schema.js";
+
+const registry = getRegistry();
 
 registry.registerPath({
   method: "get",
@@ -25,11 +28,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string().openapi({
-              example: "Erro ao buscar livros",
-            }),
-          }),
+          schema: ErrorResponseSchema,
         },
       },
     },
@@ -63,11 +62,7 @@ registry.registerPath({
       description: "Livro não encontrado",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string().openapi({
-              example: "Livro não encontrado",
-            }),
-          }),
+          schema: ErrorResponseSchema,
         },
       },
     },
@@ -75,11 +70,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string().openapi({
-              example: "Erro ao buscar livro",
-            }),
-          }),
+          schema: ErrorResponseSchema,
         },
       },
     },
@@ -114,11 +105,7 @@ registry.registerPath({
       description: "Dados inválidos",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string().openapi({
-              example: "Campos obrigatórios: titulo e autor",
-            }),
-          }),
+          schema: ErrorResponseSchema,
         },
       },
     },
@@ -126,11 +113,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string().openapi({
-              example: "Erro ao criar livro",
-            }),
-          }),
+          schema: ErrorResponseSchema,
         },
       },
     },
@@ -171,11 +154,7 @@ registry.registerPath({
       description: "Livro não encontrado",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string().openapi({
-              example: "Livro não encontrado",
-            }),
-          }),
+          schema: ErrorResponseSchema,
         },
       },
     },
@@ -183,11 +162,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string().openapi({
-              example: "Erro ao atualizar livro",
-            }),
-          }),
+          schema: ErrorResponseSchema,
         },
       },
     },
@@ -221,11 +196,7 @@ registry.registerPath({
       description: "Livro não encontrado",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string().openapi({
-              example: "Livro não encontrado",
-            }),
-          }),
+          schema: ErrorResponseSchema,
         },
       },
     },
@@ -233,11 +204,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: z.object({
-            message: z.string().openapi({
-              example: "Erro ao deletar livro",
-            }),
-          }),
+          schema: ErrorResponseSchema,
         },
       },
     },

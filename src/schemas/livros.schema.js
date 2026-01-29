@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { registry } from "../config/openapi.js";
+import { getRegistry } from "../config/openapi.js";
+
+const registry = getRegistry();
 
 export const LivroSchema = z.object({
   id: z.number().int().openapi({
