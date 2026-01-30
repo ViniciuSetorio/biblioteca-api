@@ -66,7 +66,7 @@ registry.registerPath({
       description: "Livro não encontrado",
       content: {
         "application/json": {
-          schema: ValidationErrorSchema,
+          schema: ErrorResponseSchema,
         },
       },
     },
@@ -109,7 +109,7 @@ registry.registerPath({
       description: "Dados inválidos",
       content: {
         "application/json": {
-          schema: ValidationErrorSchema,
+          schema: ErrorResponseSchema,
           examples: {
             creatorNotFound: {
               value: {
@@ -190,6 +190,29 @@ registry.registerPath({
       content: {
         "application/json": {
           schema: ErrorResponseSchema,
+        },
+      },
+    },
+    422: {
+      description: "Regra de negócio violada",
+      content: {
+        "application/json": {
+          schema: ValidationErrorSchema,
+          examples: {
+            creatorNotFound: {
+              value: {
+                message: "Usuário criador não encontrado",
+                code: "CREATOR_NOT_FOUND",
+              },
+            },
+            insufficientRole: {
+              value: {
+                message:
+                  "Apenas bibliotecários podem ser definidos como criador do livro",
+                code: "INSUFFICIENT_ROLE",
+              },
+            },
+          },
         },
       },
     },
