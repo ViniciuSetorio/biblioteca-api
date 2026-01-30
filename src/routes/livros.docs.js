@@ -5,7 +5,11 @@ import {
   CriarLivroSchema,
   AtualizarLivroSchema,
 } from "../schemas/livros.schema.js";
-import { ErrorResponseSchema } from "../schemas/error.schema.js";
+import {
+  ErrorResponseSchema,
+  InternalError,
+  ValidationErrorSchema,
+} from "../schemas/error.schema.js";
 
 const registry = getRegistry();
 
@@ -28,7 +32,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: ErrorResponseSchema,
+          schema: InternalError,
         },
       },
     },
@@ -62,7 +66,7 @@ registry.registerPath({
       description: "Livro não encontrado",
       content: {
         "application/json": {
-          schema: ErrorResponseSchema,
+          schema: ValidationErrorSchema,
         },
       },
     },
@@ -70,7 +74,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: ErrorResponseSchema,
+          schema: InternalError,
         },
       },
     },
@@ -105,7 +109,7 @@ registry.registerPath({
       description: "Dados inválidos",
       content: {
         "application/json": {
-          schema: ErrorResponseSchema,
+          schema: ValidationErrorSchema,
         },
       },
     },
@@ -113,7 +117,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: ErrorResponseSchema,
+          schema: InternalError,
         },
       },
     },
@@ -162,7 +166,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: ErrorResponseSchema,
+          schema: InternalError,
         },
       },
     },
@@ -204,7 +208,7 @@ registry.registerPath({
       description: "Erro interno do servidor",
       content: {
         "application/json": {
-          schema: ErrorResponseSchema,
+          schema: InternalError,
         },
       },
     },

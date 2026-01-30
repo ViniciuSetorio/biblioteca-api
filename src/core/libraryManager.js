@@ -1,9 +1,16 @@
+import getDatabase from "../config/database.js";
+import {
+  NotFoundError,
+  ConflictError,
+  UnprocessableEntityError,
+} from "../utils/httpError.js";
+
 let instance;
 
-export default function getLibraryManager(db) {
-  if (instance) {
-    return instance;
-  }
+export function createLibraryManager() {
+  if (instance) return instance;
+
+  const db = getDatabase();
 
   instance = {
     async emprestarLivro({ usuarioId, livroId }) {
@@ -13,43 +20,39 @@ export default function getLibraryManager(db) {
         await client.query("BEGIN");
 
         const livroResult = await client.query(
-          `SELECT id, copias_disponiveis
-           FROM livros
-           WHERE id = $1
-           FOR UPDATE`,
+          `SELECT id, copias_disponiveis FROM livros WHERE id = $1 FOR UPDATE`,
           [livroId],
         );
 
         if (livroResult.rowCount === 0) {
-          throw new Error("Livro não encontrado");
+          throw NotFoundError("Livro não encontrado", "BOOK_NOT_FOUND");
         }
 
         const livro = livroResult.rows[0];
 
         if (livro.copias_disponiveis <= 0) {
-          throw new Error("Nenhuma cópia disponível para empréstimo");
+          throw ConflictError(
+            "Nenhuma cópia disponível para empréstimo",
+            "NO_AVAILABLE_COPIES",
+          );
         }
 
         const dataPrevistaDevolucao = new Date();
         dataPrevistaDevolucao.setDate(dataPrevistaDevolucao.getDate() + 7);
 
-        const emprestimoResult = await client.query(
-          `INSERT INTO emprestimos
-           (usuario_id, livro_id, data_emprestimo, data_prevista_devolucao)
-           VALUES ($1, $2, NOW(), $3)
-           RETURNING *`,
+        const { rows } = await client.query(
+          `INSERT INTO emprestimos (usuario_id, livro_id, data_emprestimo, data_prevista_devolucao)
+           VALUES ($1, $2, NOW(), $3) RETURNING *`,
           [usuarioId, livroId, dataPrevistaDevolucao],
         );
 
         await client.query(
-          `UPDATE livros
-           SET copias_disponiveis = copias_disponiveis - 1
-           WHERE id = $1`,
+          `UPDATE livros SET copias_disponiveis = copias_disponiveis - 1 WHERE id = $1`,
           [livroId],
         );
 
         await client.query("COMMIT");
-        return emprestimoResult.rows[0];
+        return rows[0];
       } catch (error) {
         await client.query("ROLLBACK");
         throw error;
@@ -64,42 +67,38 @@ export default function getLibraryManager(db) {
       try {
         await client.query("BEGIN");
 
-        const emprestimoResult = await client.query(
-          `SELECT id, livro_id, status
-           FROM emprestimos
-           WHERE id = $1
-           FOR UPDATE`,
+        const { rows, rowCount } = await client.query(
+          `SELECT id, livro_id, status FROM emprestimos WHERE id = $1 FOR UPDATE`,
           [emprestimoId],
         );
 
-        if (emprestimoResult.rowCount === 0) {
-          throw new Error("Empréstimo não encontrado");
+        if (rowCount === 0) {
+          throw NotFoundError("Empréstimo não encontrado", "LOAN_NOT_FOUND");
         }
 
-        const emprestimo = emprestimoResult.rows[0];
+        const emprestimo = rows[0];
 
         if (emprestimo.status !== "ativo") {
-          throw new Error("Empréstimo já foi finalizado");
+          throw ConflictError(
+            "Empréstimo já foi finalizado",
+            "LOAN_ALREADY_FINISHED",
+          );
         }
 
-        const devolucaoResult = await client.query(
+        const { rows: devolucao } = await client.query(
           `UPDATE emprestimos
-           SET status = 'devolvido',
-               data_devolucao = CURRENT_TIMESTAMP
-           WHERE id = $1
-           RETURNING *`,
+           SET status = 'devolvido', data_devolucao = CURRENT_TIMESTAMP
+           WHERE id = $1 RETURNING *`,
           [emprestimoId],
         );
 
         await client.query(
-          `UPDATE livros
-           SET copias_disponiveis = copias_disponiveis + 1
-           WHERE id = $1`,
+          `UPDATE livros SET copias_disponiveis = copias_disponiveis + 1 WHERE id = $1`,
           [emprestimo.livro_id],
         );
 
         await client.query("COMMIT");
-        return devolucaoResult.rows[0];
+        return devolucao[0];
       } catch (error) {
         await client.query("ROLLBACK");
         throw error;
@@ -108,130 +107,70 @@ export default function getLibraryManager(db) {
       }
     },
 
-    async listarEmprestimos({ status, usuarioId, livroId } = {}) {
-      const where = [];
-      const values = [];
-      let i = 1;
-
-      if (status) {
-        where.push(`e.status = $${i++}`);
-        values.push(status);
-      }
-      if (usuarioId) {
-        where.push(`e.usuario_id = $${i++}`);
-        values.push(usuarioId);
-      }
-      if (livroId) {
-        where.push(`e.livro_id = $${i++}`);
-        values.push(livroId);
-      }
-
-      const sql = `
-        SELECT
-          e.*,
-          CASE
-            WHEN e.status = 'ativo'
-             AND e.data_devolucao IS NULL
-             AND NOW() > e.data_prevista_devolucao
-            THEN 'atrasado'
-            ELSE e.status
-          END AS status_calculado
-        FROM emprestimos e
-        ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-        ORDER BY e.data_emprestimo DESC
-      `;
-
-      const { rows } = await db.query(sql, values);
-      return rows;
-    },
-
     async obterEmprestimo({ emprestimoId }) {
       const { rows, rowCount } = await db.query(
-        "SELECT * FROM emprestimos WHERE id = $1",
+        `SELECT * FROM emprestimos WHERE id = $1`,
         [emprestimoId],
       );
 
       if (rowCount === 0) {
-        throw new Error("Empréstimo não encontrado");
+        throw NotFoundError("Empréstimo não encontrado", "LOAN_NOT_FOUND");
       }
 
       return rows[0];
     },
 
-    async reservarLivro({ usuarioId, livroId }) {
+    async calcularMulta({ emprestimoId }) {
       const client = await db.connect();
 
       try {
         await client.query("BEGIN");
 
-        const livroResult = await client.query(
-          `SELECT copias_disponiveis
-           FROM livros
-           WHERE id = $1
-           FOR UPDATE`,
-          [livroId],
+        const { rows, rowCount } = await client.query(
+          `SELECT data_prevista_devolucao, data_devolucao
+           FROM emprestimos WHERE id = $1 FOR UPDATE`,
+          [emprestimoId],
         );
 
-        if (livroResult.rowCount === 0) {
-          throw new Error("Livro não encontrado");
+        if (rowCount === 0) {
+          throw NotFoundError("Empréstimo não encontrado", "LOAN_NOT_FOUND");
         }
 
-        if (livroResult.rows[0].copias_disponiveis > 0) {
-          throw new Error(
-            "Livro disponível para empréstimo. Reserva não permitida",
+        const emprestimo = rows[0];
+
+        if (!emprestimo.data_devolucao) {
+          throw UnprocessableEntityError(
+            "Empréstimo ainda não foi devolvido",
+            "LOAN_NOT_RETURNED",
           );
         }
 
-        const reservaExistente = await client.query(
-          `SELECT id
-           FROM reservas
-           WHERE usuario_id = $1
-             AND livro_id = $2
-             AND status = 'ativa'`,
-          [usuarioId, livroId],
-        );
+        const atrasoMs =
+          new Date(emprestimo.data_devolucao) -
+          new Date(emprestimo.data_prevista_devolucao);
 
-        if (reservaExistente.rowCount > 0) {
-          throw new Error(
-            "Usuário já possui uma reserva ativa para este livro",
-          );
+        if (atrasoMs <= 0) {
+          await client.query("COMMIT");
+          return { multa: 0 };
         }
 
-        const reservaResult = await client.query(
-          `INSERT INTO reservas
-           (usuario_id, livro_id, data_expiracao, status)
-           VALUES ($1, $2, CURRENT_TIMESTAMP + INTERVAL '3 days', 'ativa')
-           RETURNING *`,
-          [usuarioId, livroId],
+        const diasAtraso = Math.ceil(atrasoMs / (1000 * 60 * 60 * 24));
+        const valorMulta = diasAtraso * 2;
+
+        const { rows: multa } = await client.query(
+          `INSERT INTO multas (emprestimo_id, valor, pago)
+           VALUES ($1, $2, false) RETURNING *`,
+          [emprestimoId, valorMulta],
         );
 
         await client.query("COMMIT");
-        return reservaResult.rows[0];
+        return multa[0];
       } catch (error) {
         await client.query("ROLLBACK");
         throw error;
       } finally {
         client.release();
       }
-    },
-
-    async calcularDisponibilidade({ livroId }) {
-      const { rows, rowCount } = await db.query(
-        `SELECT copias_disponiveis FROM livros WHERE id = $1`,
-        [livroId],
-      );
-
-      if (rowCount === 0) {
-        throw new Error("Livro não encontrado");
-      }
-
-      const { copias_disponiveis } = rows[0];
-
-      return {
-        livroId,
-        copiasDisponiveis: copias_disponiveis,
-        disponivel: copias_disponiveis > 0,
-      };
     },
   };
 

@@ -1,5 +1,5 @@
 import getDatabase from "../config/database.js";
-import { httpError } from "../utils/httpError.js";
+import { InternalServerError, NotFoundError } from "../utils/httpError.js";
 import createLivrosService from "../services/livros.service.js";
 
 const db = getDatabase();
@@ -12,7 +12,11 @@ async function pegarTodosOsLivros(_req, res) {
     return res.status(200).json(livros);
   } catch (err) {
     console.error(err);
-    const error = httpError(500, "INTERNAL_ERROR", "Erro ao buscar livros");
+    const error = InternalServerError(
+      500,
+      "INTERNAL_ERROR",
+      "Erro ao buscar livros",
+    );
     return res.status(error.status).json(error.body);
   }
 }
@@ -24,14 +28,22 @@ async function pegarLivroPorId(req, res) {
     const book = await livroService.buscarLivroPorId(Number(id));
 
     if (!book) {
-      const error = httpError(404, "BOOK_NOT_FOUND", "Livro não encontrado");
+      const error = NotFoundError(
+        404,
+        "BOOK_NOT_FOUND",
+        "Livro não encontrado",
+      );
       return res.status(error.status).json(error.body);
     }
 
     return res.status(200).json(book);
   } catch (err) {
     console.error(err);
-    const error = httpError(500, "INTERNAL_ERROR", "Erro ao buscar livros");
+    const error = InternalServerError(
+      500,
+      "INTERNAL_ERROR",
+      "Erro ao buscar livros",
+    );
     return res.status(error.status).json(error.body);
   }
 }
@@ -41,7 +53,7 @@ async function adicionarLivro(req, res) {
     const { titulo, autor } = req.body;
 
     if (!titulo || !autor) {
-      const error = httpError(
+      const error = NotFoundError(
         404,
         "REQUIRED_TITLE_AUTHOR",
         "Campos obrigatórios: titulo e autor",
@@ -54,7 +66,11 @@ async function adicionarLivro(req, res) {
     return res.status(201).json(livro);
   } catch (err) {
     console.error(err);
-    const error = httpError(500, "INTERNAL_ERROR", "Erro ao criar livro");
+    const error = InternalServerError(
+      500,
+      "INTERNAL_ERROR",
+      "Erro ao criar livro",
+    );
     return res.status(error.status).json(error.body);
   }
 }
@@ -67,14 +83,22 @@ async function atualizarLivro(req, res) {
     const livroAtualizado = await livroService.modificarLivro(Number(id), data);
 
     if (!livroAtualizado) {
-      const error = httpError(404, "BOOK_NOT_FOUND", "Livro não encontrado");
+      const error = NotFoundError(
+        404,
+        "BOOK_NOT_FOUND",
+        "Livro não encontrado",
+      );
       return res.status(error.status).json(error.body);
     }
 
     return res.status(200).json(livroAtualizado);
   } catch (err) {
     console.error(err);
-    const error = httpError(500, "INTERNAL_ERROR", "Erro ao criar livro");
+    const error = InternalServerError(
+      500,
+      "INTERNAL_ERROR",
+      "Erro ao criar livro",
+    );
     return res.status(error.status).json(error.body);
   }
 }
@@ -86,14 +110,22 @@ export async function deletarLivro(req, res) {
     const livro = await livroService.removerLivro(Number(id));
 
     if (!livro) {
-      const error = httpError(404, "BOOK_NOT_FOUND", "Livro não encontrado");
+      const error = NotFoundError(
+        404,
+        "BOOK_NOT_FOUND",
+        "Livro não encontrado",
+      );
       return res.status(error.status).json(error.body);
     }
 
     return res.status(200).json(livro);
   } catch (err) {
     console.error(err);
-    const error = httpError(500, "INTERNAL_ERROR", "Erro ao remover livro");
+    const error = InternalServerError(
+      500,
+      "INTERNAL_ERROR",
+      "Erro ao remover livro",
+    );
     return res.status(error.status).json(error.body);
   }
 }
