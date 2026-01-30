@@ -19,7 +19,7 @@ export const LivroSchema = z.object({
   publicado_em: z.string().nullable().openapi({
     example: "2008-08-01",
   }),
-  criador_por: z.number().int().openapi({
+  criado_por: z.number().int().openapi({
     example: 1,
   }),
   copias_disponiveis: z.number().int().openapi({
@@ -43,7 +43,7 @@ export const CriarLivroSchema = z.object({
   publicado_em: z.string().optional().openapi({
     example: "2003-08-30",
   }),
-  criador_por: z.number().int().openapi({
+  criado_por: z.number().int().openapi({
     example: 1,
   }),
   copias_disponiveis: z.number().int().optional().openapi({
@@ -64,7 +64,7 @@ export const AtualizarLivroSchema = z.object({
   publicado_em: z.string().optional().openapi({
     example: "2003-08-30",
   }),
-  criador_por: z.number().int().optional().openapi({
+  criado_por: z.number().int().optional().openapi({
     example: 1,
   }),
   copias_disponiveis: z.number().int().optional().openapi({

@@ -3,7 +3,7 @@ import { httpError } from "../utils/httpError.js";
 import createLivrosService from "../services/livros.service.js";
 
 const db = getDatabase();
-const livroService = createLivrosService();
+const livroService = createLivrosService(db);
 
 async function pegarTodosOsLivros(_req, res) {
   try {
@@ -11,6 +11,7 @@ async function pegarTodosOsLivros(_req, res) {
 
     return res.status(200).json(livros);
   } catch (err) {
+    console.error(err);
     const error = httpError(500, "INTERNAL_ERROR", "Erro ao buscar livros");
     return res.status(error.status).json(error.body);
   }
@@ -29,6 +30,7 @@ async function pegarLivroPorId(req, res) {
 
     return res.status(200).json(book);
   } catch (err) {
+    console.error(err);
     const error = httpError(500, "INTERNAL_ERROR", "Erro ao buscar livros");
     return res.status(error.status).json(error.body);
   }
@@ -51,6 +53,7 @@ async function adicionarLivro(req, res) {
 
     return res.status(201).json(livro);
   } catch (err) {
+    console.error(err);
     const error = httpError(500, "INTERNAL_ERROR", "Erro ao criar livro");
     return res.status(error.status).json(error.body);
   }
@@ -70,6 +73,7 @@ async function atualizarLivro(req, res) {
 
     return res.status(200).json(livroAtualizado);
   } catch (err) {
+    console.error(err);
     const error = httpError(500, "INTERNAL_ERROR", "Erro ao criar livro");
     return res.status(error.status).json(error.body);
   }
@@ -88,6 +92,7 @@ export async function deletarLivro(req, res) {
 
     return res.status(200).json(livro);
   } catch (err) {
+    console.error(err);
     const error = httpError(500, "INTERNAL_ERROR", "Erro ao remover livro");
     return res.status(error.status).json(error.body);
   }

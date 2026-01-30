@@ -6,7 +6,7 @@ export const ErrorResponseSchema = z.object({
       example: "BOOK_NOT_FOUND",
     }),
     message: z.string().openapi({
-      example: "Livro não encontrado"
+      example: "Livro não encontrado",
     }),
   }),
 });
