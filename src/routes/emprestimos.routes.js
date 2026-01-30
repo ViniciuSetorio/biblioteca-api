@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
-import LibraryManager from "../core/libraryManager.js";
+import { createLibraryManager } from "../core/libraryManager.js";
 import { getRegistry } from "../config/openapi.js";
+
+const LibraryManager = createLibraryManager();
 
 const registry = getRegistry();
 
