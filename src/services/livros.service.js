@@ -75,6 +75,28 @@ export default function createLivrosService(db) {
       copias_disponiveis,
     } = data;
 
+    if (criado_por !== undefined) {
+      const { rows, rowCount } = await db.query(
+        `SELECT id, cargo FROM usuarios WHERE id = $1`,
+        [criado_por],
+      );
+
+      if (rowCount === 0) {
+        const error = new Error("Usuário criador não encontrado");
+        error.code = "CREATOR_NOT_FOUND";
+        error.httpStatus = 422;
+        throw error;
+      }
+
+      if (rows[0].cargo !== "bibliotecario") {
+        const error = new Error(
+          "Apenas bibliotecários podem ser definidos como criador do livro",
+        );
+        error.code = "INSUFFICIENT_ROLE";
+        error.httpStatus = 422;
+        throw error;
+      }
+    }
     const query = `
       UPDATE livros
       SET titulo = COALESCE($1, titulo), autor = COALESCE($2, autor), isbn = COALESCE($3, isbn),
