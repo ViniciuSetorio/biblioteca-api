@@ -53,17 +53,16 @@ async function adicionarLivro(req, res) {
     const livro = await livroService.criarLivro(req.body);
     return res.status(201).json(livro);
   } catch (error) {
-    if (error.code === "CREATOR_NOT_FOUND") {
+    if (error.httpStatus) {
       return res.status(error.httpStatus).json({
         message: error.message,
         code: error.code,
       });
     }
 
-    // FK do Postgres (fallback)
     if (error.code === "23503") {
       return res.status(422).json({
-        message: "Usuário criador não existe",
+        message: "Usuário criador inválido",
         code: "INVALID_FOREIGN_KEY",
       });
     }

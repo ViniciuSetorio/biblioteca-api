@@ -121,6 +121,29 @@ registry.registerPath({
         },
       },
     },
+    422: {
+      description: "Regra de negócio violada",
+      content: {
+        "application/json": {
+          schema: ValidationErrorSchema,
+          examples: {
+            creatorNotFound: {
+              value: {
+                message: "Usuário criador não encontrado",
+                code: "CREATOR_NOT_FOUND",
+              },
+            },
+            insufficientRole: {
+              value: {
+                message: "Apenas bibliotecários podem cadastrar livros",
+                code: "INSUFFICIENT_ROLE",
+              },
+            },
+          },
+        },
+      },
+    },
+
     500: {
       description: "Erro interno do servidor",
       content: {

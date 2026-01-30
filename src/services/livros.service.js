@@ -44,6 +44,13 @@ export default function createLivrosService(db) {
         error.httpStatus = 422;
         throw error;
       }
+
+      if (usuarioExiste.rows[0].cargo !== "bibliotecario") {
+        const error = new Error("Apenas bibliotecários podem cadastrar livros");
+        error.code = "INSUFFICIENT_ROLE";
+        error.httpStatus = 422;
+        throw error;
+      }
     }
 
     const result = await db.query(
