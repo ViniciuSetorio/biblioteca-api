@@ -50,28 +50,29 @@ async function pegarLivroPorId(req, res) {
 
 async function adicionarLivro(req, res) {
   try {
-    const { titulo, autor } = req.body;
-
-    if (!titulo || !autor) {
-      const error = NotFoundError(
-        404,
-        "REQUIRED_TITLE_AUTHOR",
-        "Campos obrigatórios: titulo e autor",
-      );
-      return res.status(error.status).json(error.body);
+    const livro = await livroService.criarLivro(req.body);
+    return res.status(201).json(livro);
+  } catch (error) {
+    if (error.code === "CREATOR_NOT_FOUND") {
+      return res.status(error.httpStatus).json({
+        message: error.message,
+        code: error.code,
+      });
     }
 
-    const livro = await livroService.criarLivro(req.body);
+    // FK do Postgres (fallback)
+    if (error.code === "23503") {
+      return res.status(422).json({
+        message: "Usuário criador não existe",
+        code: "INVALID_FOREIGN_KEY",
+      });
+    }
 
-    return res.status(201).json(livro);
-  } catch (err) {
-    console.error(err);
-    const error = InternalServerError(
-      500,
-      "INTERNAL_ERROR",
-      "Erro ao criar livro",
-    );
-    return res.status(error.status).json(error.body);
+    console.error(error);
+    return res.status(500).json({
+      message: "Erro ao criar livro",
+      code: "INTERNAL_ERROR",
+    });
   }
 }
 

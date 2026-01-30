@@ -110,6 +110,14 @@ registry.registerPath({
       content: {
         "application/json": {
           schema: ValidationErrorSchema,
+          examples: {
+            creatorNotFound: {
+              value: {
+                message: "Usuário criador não encontrado",
+                code: "CREATOR_NOT_FOUND",
+              },
+            },
+          },
         },
       },
     },

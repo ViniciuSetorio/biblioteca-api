@@ -32,6 +32,20 @@ export default function createLivrosService(db) {
       copias_disponiveis = 0,
     } = data;
 
+    if (criado_por) {
+      const usuarioExiste = await db.query(
+        "SELECT id FROM usuarios WHERE id = $1",
+        [criado_por],
+      );
+
+      if (usuarioExiste.rowCount === 0) {
+        const error = new Error("Usuário criador não encontrado");
+        error.code = "CREATOR_NOT_FOUND";
+        error.httpStatus = 422;
+        throw error;
+      }
+    }
+
     const result = await db.query(
       `
       INSERT INTO livros (titulo, autor, isbn, publicado_em, criado_por, copias_disponiveis)
