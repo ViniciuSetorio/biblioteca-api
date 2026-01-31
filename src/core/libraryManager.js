@@ -158,13 +158,237 @@ export function createLibraryManager() {
         const valorMulta = diasAtraso * 2;
 
         const { rows: multa } = await client.query(
-          `INSERT INTO multas (emprestimo_id, valor, pago)
+          `INSERT INTO multas (emprestimos_id, valor, pago)
            VALUES ($1, $2, false) RETURNING *`,
           [emprestimoId, valorMulta],
         );
 
         await client.query("COMMIT");
         return multa[0];
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
+    async listarEmprestimos(filters = {}) {
+      let query = `SELECT * FROM emprestimos WHERE 1=1`;
+      const params = [];
+      let paramIndex = 1;
+
+      if (filters.status) {
+        query += ` AND status = $${paramIndex}`;
+        params.push(filters.status);
+        paramIndex++;
+      }
+
+      if (filters.usuarioId) {
+        query += ` AND usuario_id = $${paramIndex}`;
+        params.push(filters.usuarioId);
+        paramIndex++;
+      }
+
+      if (filters.livroId) {
+        query += ` AND livro_id = $${paramIndex}`;
+        params.push(filters.livroId);
+        paramIndex++;
+      }
+
+      query += ` ORDER BY data_emprestimo DESC`;
+
+      const { rows } = await db.query(query, params);
+      return rows;
+    },
+
+    async criarReserva({ usuarioId, livroId }) {
+      const client = await db.connect();
+
+      try {
+        await client.query("BEGIN");
+
+        const livroResult = await client.query(
+          `SELECT id, copias_disponiveis FROM livros WHERE id = $1`,
+          [livroId],
+        );
+
+        if (livroResult.rowCount === 0) {
+          throw NotFoundError("Livro não encontrado", "BOOK_NOT_FOUND");
+        }
+
+        const dataExpiracao = new Date();
+        dataExpiracao.setDate(dataExpiracao.getDate() + 2);
+
+        const { rows } = await client.query(
+          `INSERT INTO reservas (usuario_id, livro_id, data_reserva, data_expiracao, status)
+           VALUES ($1, $2, NOW(), $3, 'ativa') RETURNING *`,
+          [usuarioId, livroId, dataExpiracao],
+        );
+
+        await client.query("COMMIT");
+        return rows[0];
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
+    async cancelarReserva({ reservaId }) {
+      const client = await db.connect();
+
+      try {
+        await client.query("BEGIN");
+
+        const { rows, rowCount } = await client.query(
+          `SELECT id, status FROM reservas WHERE id = $1 FOR UPDATE`,
+          [reservaId],
+        );
+
+        if (rowCount === 0) {
+          throw NotFoundError("Reserva não encontrada", "RESERVATION_NOT_FOUND");
+        }
+
+        const reserva = rows[0];
+
+        if (reserva.status !== "ativa") {
+          throw ConflictError(
+            "Reserva não está ativa",
+            "RESERVATION_NOT_ACTIVE",
+          );
+        }
+
+        const { rows: updated } = await client.query(
+          `UPDATE reservas SET status = 'cancelada' WHERE id = $1 RETURNING *`,
+          [reservaId],
+        );
+
+        await client.query("COMMIT");
+        return updated[0];
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
+    async listarReservas(filters = {}) {
+      let query = `SELECT * FROM reservas WHERE 1=1`;
+      const params = [];
+      let paramIndex = 1;
+
+      if (filters.status) {
+        query += ` AND status = $${paramIndex}`;
+        params.push(filters.status);
+        paramIndex++;
+      }
+
+      if (filters.usuarioId) {
+        query += ` AND usuario_id = $${paramIndex}`;
+        params.push(filters.usuarioId);
+        paramIndex++;
+      }
+
+      if (filters.livroId) {
+        query += ` AND livro_id = $${paramIndex}`;
+        params.push(filters.livroId);
+        paramIndex++;
+      }
+
+      query += ` ORDER BY data_reserva DESC`;
+
+      const { rows } = await db.query(query, params);
+      return rows;
+    },
+
+    async obterReserva({ reservaId }) {
+      const { rows, rowCount } = await db.query(
+        `SELECT * FROM reservas WHERE id = $1`,
+        [reservaId],
+      );
+
+      if (rowCount === 0) {
+        throw NotFoundError("Reserva não encontrada", "RESERVATION_NOT_FOUND");
+      }
+
+      return rows[0];
+    },
+
+    async listarMultas(filters = {}) {
+      let query = `SELECT m.*, e.usuario_id, e.livro_id 
+                   FROM multas m
+                   JOIN emprestimos e ON m.emprestimos_id = e.id
+                   WHERE 1=1`;
+      const params = [];
+      let paramIndex = 1;
+
+      if (filters.pago !== undefined) {
+        query += ` AND m.pago = $${paramIndex}`;
+        params.push(filters.pago);
+        paramIndex++;
+      }
+
+      if (filters.usuarioId) {
+        query += ` AND e.usuario_id = $${paramIndex}`;
+        params.push(filters.usuarioId);
+        paramIndex++;
+      }
+
+      query += ` ORDER BY m.created_at DESC`;
+
+      const { rows } = await db.query(query, params);
+      return rows;
+    },
+
+    async obterMulta({ multaId }) {
+      const { rows, rowCount } = await db.query(
+        `SELECT m.*, e.usuario_id, e.livro_id 
+         FROM multas m
+         JOIN emprestimos e ON m.emprestimos_id = e.id
+         WHERE m.id = $1`,
+        [multaId],
+      );
+
+      if (rowCount === 0) {
+        throw NotFoundError("Multa não encontrada", "FINE_NOT_FOUND");
+      }
+
+      return rows[0];
+    },
+
+    async pagarMulta({ multaId }) {
+      const client = await db.connect();
+
+      try {
+        await client.query("BEGIN");
+
+        const { rows, rowCount } = await client.query(
+          `SELECT id, pago FROM multas WHERE id = $1 FOR UPDATE`,
+          [multaId],
+        );
+
+        if (rowCount === 0) {
+          throw NotFoundError("Multa não encontrada", "FINE_NOT_FOUND");
+        }
+
+        const multa = rows[0];
+
+        if (multa.pago) {
+          throw ConflictError("Multa já foi paga", "FINE_ALREADY_PAID");
+        }
+
+        const { rows: updated } = await client.query(
+          `UPDATE multas 
+           SET pago = true, data_pagamento = CURRENT_TIMESTAMP 
+           WHERE id = $1 RETURNING *`,
+          [multaId],
+        );
+
+        await client.query("COMMIT");
+        return updated[0];
       } catch (error) {
         await client.query("ROLLBACK");
         throw error;

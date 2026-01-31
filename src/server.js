@@ -4,6 +4,8 @@ import { generateOpenApiDocumentation } from "./config/openapi.js";
 import { apiReference } from "@scalar/express-api-reference";
 import emprestimosRoutes from "./routes/emprestimos.routes.js";
 import livrosRoutes from "./routes/livros.routes.js";
+import reservasRoutes from "./routes/reservas.routes.js";
+import multasRoutes from "./routes/multas.routes.js";
 
 import "./routes/livros.docs.js";
 
@@ -20,6 +22,8 @@ app.use(
 
 app.use("/emprestimos", emprestimosRoutes);
 app.use("/livros", livrosRoutes);
+app.use("/reservas", reservasRoutes);
+app.use("/multas", multasRoutes);
 
 const openApiDocumentation = generateOpenApiDocumentation();
 
