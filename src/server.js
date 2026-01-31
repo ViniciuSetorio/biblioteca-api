@@ -2,15 +2,16 @@ import express from "express";
 import cors from "cors";
 import { generateOpenApiDocumentation } from "./config/openapi.js";
 import { apiReference } from "@scalar/express-api-reference";
+import usuariosRoutes from "./routes/usuarios.route.js";
 import emprestimosRoutes from "./routes/emprestimos.routes.js";
 import livrosRoutes from "./routes/livros.routes.js";
 import reservasRoutes from "./routes/reservas.routes.js";
 import multasRoutes from "./routes/multas.routes.js";
 
-// Importar documentações OpenAPI (schemas são registrados automaticamente)
-import "./routes/livros.docs.js";
-import "./routes/reservas.docs.js";
-import "./routes/multas.docs.js";
+import "./docs/usuarios.docs.js";
+import "./docs/livros.docs.js";
+import "./docs/reservas.docs.js";
+import "./docs/multas.docs.js";
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(
   }),
 );
 
+app.use("/usuarios", usuariosRoutes);
 app.use("/emprestimos", emprestimosRoutes);
 app.use("/livros", livrosRoutes);
 app.use("/reservas", reservasRoutes);
