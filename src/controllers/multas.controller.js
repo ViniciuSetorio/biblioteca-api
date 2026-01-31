@@ -2,6 +2,10 @@ import getDatabase from "../config/database.js";
 import createMultasService from "../services/multas.service.js";
 import { createLibraryManager } from "../core/libraryManager.js";
 import { InternalServerError } from "../utils/httpError.js";
+import {
+  ListarMultasQuerySchema,
+  MultaIdParamsSchema,
+} from "../schemas/multas.schema.js";
 
 const db = getDatabase();
 const multasService = createMultasService(db);
@@ -9,7 +13,8 @@ const libraryManager = createLibraryManager();
 
 async function listarMultas(req, res) {
   try {
-    const multas = await multasService.listarMultas(req.query);
+    const filters = ListarMultasQuerySchema.parse(req.query);
+    const multas = await multasService.listarMultas(filters);
     return res.status(200).json(multas);
   } catch (err) {
     console.error(err);
@@ -23,9 +28,8 @@ async function listarMultas(req, res) {
 
 async function obterMulta(req, res) {
   try {
-    const multa = await multasService.buscarMultaPorId(
-      Number(req.params.multaId),
-    );
+    const { multaId } = MultaIdParamsSchema.parse(req.params);
+    const multa = await multasService.buscarMultaPorId(multaId);
 
     return res.status(200).json(multa);
   } catch (err) {
@@ -68,8 +72,9 @@ async function calcularMulta(req, res) {
 }
 
 async function pagarMulta(req, res) {
-  try {    
-    const multa = await libraryManager.quitarMulta(Number(req.params.multaId));
+  try {  
+    const { multaId } = MultaIdParamsSchema.parse(req.params);  
+    const multa = await libraryManager.quitarMulta(multaId);
 
     return res.status(200).json(multa);
   } catch (err) {

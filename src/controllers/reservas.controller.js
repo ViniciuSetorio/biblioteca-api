@@ -2,6 +2,11 @@ import getDatabase from "../config/database.js";
 import createReservasService from "../services/reservas.service.js";
 import { createLibraryManager } from "../core/libraryManager.js";
 import { InternalServerError } from "../utils/httpError.js";
+import {
+  CriarReservaSchema,
+  ListarReservasQuerySchema,
+  ReservaIdParamsSchema,
+} from "../schemas/reservas.schema.js";
 
 const db = getDatabase();
 const reservasService = createReservasService(db);
@@ -9,7 +14,8 @@ const libraryManager = createLibraryManager();
 
 async function criarReserva(req, res) {
   try {
-    const reserva = await libraryManager.criarReserva(req.body);
+    const filters = CriarReservaSchema.parse(req.query);
+    const reserva = await libraryManager.criarReserva(filters);
     return res.status(201).json(reserva);
   } catch (err) {
     if (err.statusCode) {
@@ -27,7 +33,8 @@ async function criarReserva(req, res) {
 
 async function listarReservas(req, res) {
   try {
-    const reservas = await reservasService.listarReservas(req.query);
+    const filters = ListarReservasQuerySchema.parse(req.query);
+    const reservas = await reservasService.listarReservas(filters);
     return res.status(200).json(reservas);
   } catch (err) {
     console.error(err);
@@ -41,9 +48,8 @@ async function listarReservas(req, res) {
 
 async function obterReserva(req, res) {
   try {
-    const reserva = await reservasService.buscarReservaPorId(
-      Number(req.params.reservaId),
-    );
+    const { reservaId } = ReservaIdParamsSchema.parse(req.params);
+    const reserva = await reservasService.buscarReservaPorId(reservaId);
     return res.status(200).json(reserva);
   } catch (err) {
     if (err.statusCode) {
@@ -61,8 +67,9 @@ async function obterReserva(req, res) {
 
 async function cancelarReserva(req, res) {
   try {
+    const { reservaId } = ReservaIdParamsSchema.parse(req.params);
     const reserva = await libraryManager.cancelarReserva({
-      reservaId: Number(req.params.reservaId),
+      reservaId: reservaId,
     });
 
     return res.status(200).json(reserva);
