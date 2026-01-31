@@ -248,7 +248,10 @@ export function createLibraryManager() {
         );
 
         if (rowCount === 0) {
-          throw NotFoundError("Reserva não encontrada", "RESERVATION_NOT_FOUND");
+          throw NotFoundError(
+            "Reserva não encontrada",
+            "RESERVATION_NOT_FOUND",
+          );
         }
 
         const reserva = rows[0];
@@ -275,91 +278,7 @@ export function createLibraryManager() {
       }
     },
 
-    async listarReservas(filters = {}) {
-      let query = `SELECT * FROM reservas WHERE 1=1`;
-      const params = [];
-      let paramIndex = 1;
-
-      if (filters.status) {
-        query += ` AND status = $${paramIndex}`;
-        params.push(filters.status);
-        paramIndex++;
-      }
-
-      if (filters.usuarioId) {
-        query += ` AND usuario_id = $${paramIndex}`;
-        params.push(filters.usuarioId);
-        paramIndex++;
-      }
-
-      if (filters.livroId) {
-        query += ` AND livro_id = $${paramIndex}`;
-        params.push(filters.livroId);
-        paramIndex++;
-      }
-
-      query += ` ORDER BY data_reserva DESC`;
-
-      const { rows } = await db.query(query, params);
-      return rows;
-    },
-
-    async obterReserva({ reservaId }) {
-      const { rows, rowCount } = await db.query(
-        `SELECT * FROM reservas WHERE id = $1`,
-        [reservaId],
-      );
-
-      if (rowCount === 0) {
-        throw NotFoundError("Reserva não encontrada", "RESERVATION_NOT_FOUND");
-      }
-
-      return rows[0];
-    },
-
-    async listarMultas(filters = {}) {
-      let query = `SELECT m.*, e.usuario_id, e.livro_id 
-                   FROM multas m
-                   JOIN emprestimos e ON m.emprestimos_id = e.id
-                   WHERE 1=1`;
-      const params = [];
-      let paramIndex = 1;
-
-      if (filters.pago !== undefined) {
-        query += ` AND m.pago = $${paramIndex}`;
-        params.push(filters.pago);
-        paramIndex++;
-      }
-
-      if (filters.usuarioId) {
-        query += ` AND e.usuario_id = $${paramIndex}`;
-        params.push(filters.usuarioId);
-        paramIndex++;
-      }
-
-      query += ` ORDER BY m.created_at DESC`;
-
-      const { rows } = await db.query(query, params);
-      return rows;
-    },
-
-    async obterMulta({ multaId }) {
-      const { rows, rowCount } = await db.query(
-        `SELECT m.*, e.usuario_id, e.livro_id 
-         FROM multas m
-         JOIN emprestimos e ON m.emprestimos_id = e.id
-         WHERE m.id = $1`,
-        [multaId],
-      );
-
-      if (rowCount === 0) {
-        throw NotFoundError("Multa não encontrada", "FINE_NOT_FOUND");
-      }
-
-      return rows[0];
-    },
-
-    async pagarMulta({ multaId }) {
+    async quitarMulta(multaId) {
       const client = await db.connect();
 
       try {
