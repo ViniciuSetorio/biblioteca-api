@@ -5,10 +5,10 @@ const registry = getRegistry();
 
 export const ErrorResponseSchema = z.object({
   message: z.string().openapi({
-    example: "Livro não encontrado",
+    example: "Não encontrado",
   }),
   code: z.string().openapi({
-    example: "BOOK_NOT_FOUND",
+    example: "NOT_FOUND",
   }),
 });
 

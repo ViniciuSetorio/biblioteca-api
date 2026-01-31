@@ -5,22 +5,20 @@ import createLivrosService from "../services/livros.service.js";
 const db = getDatabase();
 const livroService = createLivrosService(db);
 
-function handleControllerError(res, err, fallbackMessage) {
-  if (err.status && err.body) {
-    return res.status(err.status).json(err.body);
-  }
-
-  console.error(err);
-  const error = InternalServerError(500, "INTERNAL_ERROR", fallbackMessage);
-  return res.status(error.status).json(error.body);
-}
-
 async function pegarTodosOsLivros(_req, res) {
   try {
     const livros = await livroService.buscarLivros();
     return res.status(200).json(livros);
   } catch (err) {
-    return handleControllerError(res, err, "Erro ao buscar livros");
+    console.error(err);
+    const error = InternalServerError(
+      "Erro ao buscar livros",
+      "INTERNAL_ERROR",
+    );
+
+    return res
+      .status(error.statusCode)
+      .json({ message: error.message, code: error.code });
   }
 }
 
@@ -30,17 +28,20 @@ async function pegarLivroPorId(req, res) {
     const book = await livroService.buscarLivroPorId(Number(id));
 
     if (!book) {
-      const error = NotFoundError(
-        404,
-        "BOOK_NOT_FOUND",
-        "Livro não encontrado",
-      );
-      return res.status(error.status).json(error.body);
+      const error = NotFoundError("Livro não encontrado", "BOOK_NOT_FOUND");
+      return res
+        .status(error.statusCode)
+        .json({ message: error.message, code: error.code });
     }
 
     return res.status(200).json(book);
   } catch (err) {
-    return handleControllerError(res, err, "Erro ao buscar livro");
+    console.error(err);
+    const error = InternalServerError("Erro ao buscar livro", "INTERNAL_ERROR");
+
+    return res
+      .status(error.statusCode)
+      .json({ message: error.message, code: error.code });
   }
 }
 
@@ -49,7 +50,12 @@ async function adicionarLivro(req, res) {
     const livro = await livroService.criarLivro(req.body);
     return res.status(201).json(livro);
   } catch (err) {
-    return handleControllerError(res, err, "Erro ao criar livro");
+    console.error(err);
+    const error = InternalServerError("Erro ao criar livros", "INTERNAL_ERROR");
+
+    return res
+      .status(error.statusCode)
+      .json({ message: error.message, code: error.code });
   }
 }
 
@@ -59,17 +65,23 @@ async function atualizarLivro(req, res) {
     const livroAtualizado = await livroService.modificarLivro(id, req.body);
 
     if (!livroAtualizado) {
-      const error = NotFoundError(
-        404,
-        "BOOK_NOT_FOUND",
-        "Livro não encontrado",
-      );
-      return res.status(error.status).json(error.body);
+      const error = NotFoundError("Livro não encontrado", "BOOK_NOT_FOUND");
+      return res
+        .status(error.statusCode)
+        .json({ message: error.message, code: error.code });
     }
 
     return res.status(200).json(livroAtualizado);
   } catch (err) {
-    return handleControllerError(res, err, "Erro ao atualizar livro");
+    console.error(err);
+    const error = InternalServerError(
+      "Erro ao atualizar livro",
+      "INTERNAL_ERROR",
+    );
+
+    return res
+      .status(error.statusCode)
+      .json({ message: error.message, code: error.code });
   }
 }
 
@@ -80,17 +92,23 @@ export async function deletarLivro(req, res) {
     const livro = await livroService.removerLivro(Number(id));
 
     if (!livro) {
-      const error = NotFoundError(
-        404,
-        "BOOK_NOT_FOUND",
-        "Livro não encontrado",
-      );
-      return res.status(error.status).json(error.body);
+      const error = NotFoundError("Livro não encontrado", "BOOK_NOT_FOUND");
+      return res
+        .status(error.statusCode)
+        .json({ message: error.message, code: error.code });
     }
 
     return res.status(200).json(livro);
   } catch (err) {
-    return handleControllerError(res, err, "Erro ao remover livro");
+    console.error(err);
+    const error = InternalServerError(
+      "Erro ao remover livro",
+      "INTERNAL_ERROR",
+    );
+
+    return res
+      .status(error.statusCode)
+      .json({ message: error.message, code: error.code });
   }
 }
 
