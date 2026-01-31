@@ -1,109 +1,14 @@
 import { Router } from "express";
-import { z } from "zod";
 import { createLibraryManager } from "../core/libraryManager.js";
-import { getRegistry } from "../config/openapi.js";
+import {
+  MultaIdParamsSchema,
+  ListarMultasQuerySchema,
+} from "../schemas/multas.schema.js";
 
 const LibraryManager = createLibraryManager();
-
-const registry = getRegistry();
-
 const router = Router();
 
-/*
- * Schemas (Zod)
- */
-const MultaIdParamsSchema = z.object({
-  multaId: z.coerce
-    .number()
-    .int()
-    .positive()
-    .openapi({ param: { name: "multaId", in: "path", required: true } }),
-});
-
-const ListarMultasQuerySchema = z.object({
-  pago: z.coerce
-    .boolean()
-    .optional()
-    .openapi({ param: { name: "pago", in: "query" } }),
-  usuarioId: z.coerce
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .openapi({ param: { name: "usuarioId", in: "query" } }),
-});
-
-/*
- * OpenAPI registrations
- */
-registry.registerPath({
-  method: "get",
-  path: "/multas",
-  tags: ["Multas"],
-  request: {
-    query: ListarMultasQuerySchema,
-  },
-  responses: {
-    200: {
-      description: "Lista de multas",
-      content: { "application/json": { schema: z.array(z.any()) } },
-    },
-  },
-});
-
-registry.registerPath({
-  method: "get",
-  path: "/multas/{multaId}",
-  tags: ["Multas"],
-  request: {
-    params: MultaIdParamsSchema,
-  },
-  responses: {
-    200: {
-      description: "Multa encontrada",
-      content: { "application/json": { schema: z.any() } },
-    },
-    404: {
-      description: "Multa não encontrada",
-      content: {
-        "application/json": { schema: z.object({ error: z.string() }) },
-      },
-    },
-  },
-});
-
-registry.registerPath({
-  method: "patch",
-  path: "/multas/{multaId}/pagar",
-  tags: ["Multas"],
-  request: {
-    params: MultaIdParamsSchema,
-  },
-  responses: {
-    200: {
-      description: "Multa paga com sucesso",
-      content: { "application/json": { schema: z.any() } },
-    },
-    400: {
-      description: "Erro de validação ou regra de negócio",
-      content: {
-        "application/json": { schema: z.object({ error: z.string() }) },
-      },
-    },
-    404: {
-      description: "Multa não encontrada",
-      content: {
-        "application/json": { schema: z.object({ error: z.string() }) },
-      },
-    },
-  },
-});
-
-/*
- * Routes
- */
-
-// GET /multas?pago=&usuarioId=
+// GET /multas - Listar multas com filtros
 router.get("/", async (req, res) => {
   try {
     const filters = ListarMultasQuerySchema.parse(req.query);
@@ -114,7 +19,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /multas/:multaId
+// GET /multas/:multaId - Obter multa específica
 router.get("/:multaId", async (req, res) => {
   try {
     const { multaId } = MultaIdParamsSchema.parse(req.params);
@@ -129,7 +34,7 @@ router.get("/:multaId", async (req, res) => {
   }
 });
 
-// PATCH /multas/:multaId/pagar
+// PATCH /multas/:multaId/pagar - Pagar multa
 router.patch("/:multaId/pagar", async (req, res) => {
   try {
     const { multaId } = MultaIdParamsSchema.parse(req.params);

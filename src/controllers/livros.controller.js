@@ -1,17 +1,26 @@
 import getDatabase from "../config/database.js";
-import { NotFoundError } from "../utils/httpError.js";
-import handlerControllerError from "../utils/handlerControllerError.js";
+import { InternalServerError, NotFoundError } from "../utils/httpError.js";
 import createLivrosService from "../services/livros.service.js";
 
 const db = getDatabase();
 const livroService = createLivrosService(db);
+
+function handleControllerError(res, err, fallbackMessage) {
+  if (err.status && err.body) {
+    return res.status(err.status).json(err.body);
+  }
+
+  console.error(err);
+  const error = InternalServerError(500, "INTERNAL_ERROR", fallbackMessage);
+  return res.status(error.status).json(error.body);
+}
 
 async function pegarTodosOsLivros(_req, res) {
   try {
     const livros = await livroService.buscarLivros();
     return res.status(200).json(livros);
   } catch (err) {
-    return handlerControllerError(res, err, "Erro ao buscar livros");
+    return handleControllerError(res, err, "Erro ao buscar livros");
   }
 }
 
@@ -31,7 +40,7 @@ async function pegarLivroPorId(req, res) {
 
     return res.status(200).json(book);
   } catch (err) {
-    return handlerControllerError(res, err, "Erro ao buscar livro");
+    return handleControllerError(res, err, "Erro ao buscar livro");
   }
 }
 
@@ -40,7 +49,7 @@ async function adicionarLivro(req, res) {
     const livro = await livroService.criarLivro(req.body);
     return res.status(201).json(livro);
   } catch (err) {
-    return handlerControllerError(res, err, "Erro ao criar livro");
+    return handleControllerError(res, err, "Erro ao criar livro");
   }
 }
 
@@ -60,7 +69,7 @@ async function atualizarLivro(req, res) {
 
     return res.status(200).json(livroAtualizado);
   } catch (err) {
-    return handlerControllerError(res, err, "Erro ao atualizar livro");
+    return handleControllerError(res, err, "Erro ao atualizar livro");
   }
 }
 
@@ -81,7 +90,7 @@ export async function deletarLivro(req, res) {
 
     return res.status(200).json(livro);
   } catch (err) {
-    return handlerControllerError(res, err, "Erro ao remover livro");
+    return handleControllerError(res, err, "Erro ao remover livro");
   }
 }
 

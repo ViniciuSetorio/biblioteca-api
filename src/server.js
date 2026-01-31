@@ -7,7 +7,10 @@ import livrosRoutes from "./routes/livros.routes.js";
 import reservasRoutes from "./routes/reservas.routes.js";
 import multasRoutes from "./routes/multas.routes.js";
 
+// Importar documentações OpenAPI (schemas são registrados automaticamente)
 import "./routes/livros.docs.js";
+import "./routes/reservas.docs.js";
+import "./routes/multas.docs.js";
 
 const app = express();
 
