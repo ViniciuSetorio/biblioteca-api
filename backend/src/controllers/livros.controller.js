@@ -50,6 +50,10 @@ async function adicionarLivro(req, res) {
     const livro = await livroService.criarLivro(req.body);
     return res.status(201).json(livro);
   } catch (err) {
+    if (err.httpStatus) {
+      return res.status(err.httpStatus).json(err);
+    }
+
     console.error(err);
     const error = InternalServerError("Erro ao criar livros", "INTERNAL_ERROR");
 

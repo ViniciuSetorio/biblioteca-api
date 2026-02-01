@@ -34,7 +34,7 @@ export default function createLivrosService(db) {
 
     if (criado_por) {
       const usuarioExiste = await db.query(
-        "SELECT id FROM usuarios WHERE id = $1",
+        "SELECT id, cargo FROM usuarios WHERE id = $1",
         [criado_por],
       );
 
