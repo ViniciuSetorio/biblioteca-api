@@ -1,0 +1,33 @@
+/node_modules
+
+# testes Idelmar
+src/app.js
+src/app.smoke.test.js
+/tests
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# cobertura de testes
+coverage/
+.nyc_output/
+
+# caches (vitest/jest/tooling)
+.vitest/
+.cache/
+.eslintcache
+
+# builds
+dist/
+build/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
