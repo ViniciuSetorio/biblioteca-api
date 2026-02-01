@@ -11,8 +11,7 @@ const Dashboard = () => {
   })
   const [loading, setLoading] = useState(true)
   const [recentEmprestimos, setRecentEmprestimos] = useState([])
-
-  const apiService = new ApiService()
+  const [backendStatus, setBackendStatus] = useState('checking')
 
   useEffect(() => {
     fetchDashboardData()
@@ -22,12 +21,24 @@ const Dashboard = () => {
     try {
       setLoading(true)
       
+      // Primeiro, testar se o backend está respondendo
+      const connectionTest = await ApiService.testConnection()
+      
+      if (!connectionTest.success) {
+        setBackendStatus('error')
+        toast.error('Backend não está respondendo')
+        setLoading(false)
+        return
+      }
+      
+      setBackendStatus('ok')
+      
       // Buscar dados em paralelo
       const [usuariosRes, livrosRes, emprestimosRes, multasRes] = await Promise.all([
-        apiService.getUsuarios(),
-        apiService.getLivros(),
-        apiService.getEmprestimos(),
-        apiService.getMultas()
+        ApiService.getUsuarios(),
+        ApiService.getLivros(),
+        ApiService.getEmprestimos(),
+        ApiService.getMultas()
       ])
 
       setStats({
@@ -40,9 +51,11 @@ const Dashboard = () => {
       // Últimos empréstimos
       const recent = emprestimosRes.data.slice(0, 5)
       setRecentEmprestimos(recent)
+      
     } catch (error) {
+      console.error('Erro no dashboard:', error)
       toast.error('Erro ao carregar dados do dashboard')
-      console.error(error)
+      setBackendStatus('error')
     } finally {
       setLoading(false)
     }
@@ -50,15 +63,35 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex flex-col justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-gray-600">
+          {backendStatus === 'checking' ? 'Conectando com backend...' : 'Carregando dados...'}
+        </p>
       </div>
     )
   }
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <div className="flex items-center space-x-2">
+          <span className={`px-3 py-1 rounded-full text-sm ${
+            backendStatus === 'ok' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {backendStatus === 'ok' ? '✅ Backend Online' : '❌ Backend Offline'}
+          </span>
+          <button
+            onClick={fetchDashboardData}
+            className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+          >
+            Atualizar
+          </button>
+        </div>
+      </div>
       
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -132,10 +165,10 @@ const Dashboard = () => {
                   ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Usuário
+                  Usuário ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Livro
+                  Livro ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -167,12 +200,30 @@ const Dashboard = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(emprestimo.data_emprestimo).toLocaleDateString()}
+                    {new Date(emprestimo.data_emprestimo).toLocaleDateString('pt-BR')}
                   </td>
                 </tr>
               ))}
+              {recentEmprestimos.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                    Nenhum empréstimo encontrado
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+        </div>
+      </div>
+      
+      {/* Informações de debug */}
+      <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+        <h4 className="text-sm font-medium text-gray-700 mb-2">Informações de Conexão:</h4>
+        <div className="text-sm text-gray-600 space-y-1">
+          <p>• Backend URL: {import.meta.env.VITE_API_URL || 'http://localhost:3000'}</p>
+          <p>• Status: {backendStatus === 'ok' ? '✅ Conectado' : '❌ Não conectado'}</p>
+          <p>• Total de usuários: {stats.usuarios}</p>
+          <p>• Total de livros: {stats.livros}</p>
         </div>
       </div>
     </div>

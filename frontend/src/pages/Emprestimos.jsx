@@ -15,8 +15,6 @@ const Emprestimos = () => {
     livroId: ''
   })
 
-  const apiService = new ApiService()
-
   useEffect(() => {
     fetchData()
   }, [filters])
@@ -24,19 +22,36 @@ const Emprestimos = () => {
   const fetchData = async () => {
     try {
       setLoading(true)
+      
+      // Limpar parâmetros vazios antes de enviar
+      const cleanFilters = {}
+      if (filters.status && filters.status !== '') {
+        cleanFilters.status = filters.status
+      }
+      if (filters.usuarioId && filters.usuarioId !== '') {
+        cleanFilters.usuarioId = parseInt(filters.usuarioId)
+      }
+      if (filters.livroId && filters.livroId !== '') {
+        cleanFilters.livroId = parseInt(filters.livroId)
+      }
+      
+      console.log('Enviando filtros:', cleanFilters) // Debug
+      
       const [emprestimosRes, usuariosRes, livrosRes] = await Promise.all([
-        apiService.getEmprestimos(filters),
-        apiService.getUsuarios(),
-        apiService.getLivros()
+        ApiService.getEmprestimos(cleanFilters),
+        ApiService.getUsuarios(),
+        ApiService.getLivros()
       ])
+
+      console.log('Resposta empréstimos:', emprestimosRes.data) // Debug
 
       // Para cada empréstimo, buscar informações do usuário e livro
       const emprestimosComDetalhes = await Promise.all(
         emprestimosRes.data.map(async (emprestimo) => {
           try {
             const [usuarioRes, livroRes] = await Promise.all([
-              apiService.getUsuario(emprestimo.usuario_id),
-              apiService.getLivro(emprestimo.livro_id)
+              ApiService.getUsuario(emprestimo.usuario_id),
+              ApiService.getLivro(emprestimo.livro_id)
             ])
             return {
               ...emprestimo,
@@ -44,10 +59,11 @@ const Emprestimos = () => {
               livro_titulo: livroRes.data.titulo
             }
           } catch (error) {
+            console.error('Erro ao buscar detalhes:', error)
             return {
               ...emprestimo,
-              usuario_nome: 'Usuário não encontrado',
-              livro_titulo: 'Livro não encontrado'
+              usuario_nome: `Usuário #${emprestimo.usuario_id}`,
+              livro_titulo: `Livro #${emprestimo.livro_id}`
             }
           }
         })
@@ -57,8 +73,8 @@ const Emprestimos = () => {
       setUsuarios(usuariosRes.data)
       setLivros(livrosRes.data)
     } catch (error) {
-      toast.error('Erro ao carregar dados')
-      console.error(error)
+      console.error('Erro detalhado:', error.response || error)
+      toast.error(`Erro ao carregar dados: ${error.response?.data?.message || error.message}`)
     } finally {
       setLoading(false)
     }

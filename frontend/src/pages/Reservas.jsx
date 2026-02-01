@@ -15,50 +15,56 @@ const Reservas = () => {
     livroId: ''
   })
 
-  const apiService = new ApiService()
-
   useEffect(() => {
+    // ✅ CORREÇÃO: Chamar a função assíncrona dentro do useEffect
     fetchData()
   }, [filters])
 
   const fetchData = async () => {
     try {
       setLoading(true)
+      
+      const cleanFilters = {}
+      
+      if (filters.status && filters.status.trim() !== '') {
+        cleanFilters.status = filters.status
+      }
+      
+      if (filters.usuarioId && filters.usuarioId !== '') {
+        const usuarioId = parseInt(filters.usuarioId)
+        if (!isNaN(usuarioId)) {
+          cleanFilters.usuarioId = usuarioId
+        }
+      }
+      
+      if (filters.livroId && filters.livroId !== '') {
+        const livroId = parseInt(filters.livroId)
+        if (!isNaN(livroId)) {
+          cleanFilters.livroId = livroId
+        }
+      }
+      
+      // ✅ CORREÇÃO: await dentro de função assíncrona
       const [reservasRes, usuariosRes, livrosRes] = await Promise.all([
-        apiService.getReservas(filters),
-        apiService.getUsuarios(),
-        apiService.getLivros()
+        ApiService.getReservas(cleanFilters),
+        ApiService.getUsuarios(),
+        ApiService.getLivros()
       ])
 
-      // Para cada reserva, buscar informações do usuário e livro
-      const reservasComDetalhes = await Promise.all(
-        reservasRes.data.map(async (reserva) => {
-          try {
-            const [usuarioRes, livroRes] = await Promise.all([
-              apiService.getUsuario(reserva.usuario_id),
-              apiService.getLivro(reserva.livro_id)
-            ])
-            return {
-              ...reserva,
-              usuario_nome: usuarioRes.data.nome,
-              livro_titulo: livroRes.data.titulo
-            }
-          } catch (error) {
-            return {
-              ...reserva,
-              usuario_nome: 'Usuário não encontrado',
-              livro_titulo: 'Livro não encontrado'
-            }
-          }
-        })
-      )
+      const reservasSimples = reservasRes.data.map(reserva => ({
+        ...reserva,
+        usuario_nome: `Usuário #${reserva.usuario_id}`,
+        livro_titulo: `Livro #${reserva.livro_id}`
+      }))
 
-      setReservas(reservasComDetalhes)
+      setReservas(reservasSimples)
       setUsuarios(usuariosRes.data)
       setLivros(livrosRes.data)
+      
     } catch (error) {
-      toast.error('Erro ao carregar dados')
-      console.error(error)
+      console.error('❌ Erro:', error)
+      toast.error('Erro ao carregar reservas')
+      setReservas([])
     } finally {
       setLoading(false)
     }
@@ -66,12 +72,13 @@ const Reservas = () => {
 
   const handleCreate = async (data) => {
     try {
-      await apiService.createReserva(data)
+      await ApiService.createReserva(data)
       toast.success('Reserva criada com sucesso!')
       setShowForm(false)
       fetchData()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Erro ao criar reserva')
+      const errorMsg = error.response?.data?.message || 'Erro ao criar reserva'
+      toast.error(errorMsg)
     }
   }
 
@@ -79,18 +86,19 @@ const Reservas = () => {
     if (!window.confirm('Confirmar cancelamento desta reserva?')) return
 
     try {
-      await apiService.cancelarReserva(id)
+      await ApiService.cancelarReserva(id)
       toast.success('Reserva cancelada com sucesso!')
       fetchData()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Erro ao cancelar reserva')
+      const errorMsg = error.response?.data?.message || 'Erro ao cancelar reserva'
+      toast.error(errorMsg)
     }
   }
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value || ''
+      [key]: value
     }))
   }
 
@@ -144,7 +152,7 @@ const Reservas = () => {
         </button>
       </div>
 
-      {/* Filtros */}
+      {/* Filtros - CORRIGIDOS */}
       <div className="bg-white shadow rounded-lg p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
@@ -169,7 +177,9 @@ const Reservas = () => {
             >
               <option value="">Todos os usuários</option>
               {usuarios.map(usuario => (
-                <option key={usuario.id} value={usuario.id}>{usuario.nome}</option>
+                <option key={usuario.id} value={usuario.id}>
+                  {usuario.nome}
+                </option>
               ))}
             </select>
           </div>
@@ -182,7 +192,9 @@ const Reservas = () => {
             >
               <option value="">Todos os livros</option>
               {livros.map(livro => (
-                <option key={livro.id} value={livro.id}>{livro.titulo}</option>
+                <option key={livro.id} value={livro.id}>
+                  {livro.titulo}
+                </option>
               ))}
             </select>
           </div>
@@ -280,7 +292,7 @@ const Reservas = () => {
                     {isReservaAtiva(reserva) && (
                       <button
                         onClick={() => handleCancel(reserva.id)}
-                        className="text-red-600 hover:text-red-900 mr-3"
+                        className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
                       >
                         Cancelar
                       </button>
@@ -288,14 +300,16 @@ const Reservas = () => {
                   </td>
                 </tr>
               ))}
+              
+              {reservas.length === 0 && (
+                <tr>
+                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                    Nenhuma reserva encontrada
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
-          
-          {reservas.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-gray-500">Nenhuma reserva encontrada</p>
-            </div>
-          )}
         </div>
       )}
     </div>

@@ -11,8 +11,6 @@ const Multas = () => {
     usuarioId: ''
   })
 
-  const apiService = new ApiService()
-
   useEffect(() => {
     fetchData()
   }, [filters])
@@ -21,44 +19,57 @@ const Multas = () => {
     try {
       setLoading(true)
       
+      // CORREÇÃO: Limpar parâmetros vazios ANTES de enviar
+      const cleanFilters = {}
+      
+      if (filters.pago !== undefined && filters.pago !== '') {
+        cleanFilters.pago = filters.pago === 'true'
+      }
+      
+      if (filters.usuarioId && filters.usuarioId !== '') {
+        const usuarioId = parseInt(filters.usuarioId)
+        if (!isNaN(usuarioId)) {
+          cleanFilters.usuarioId = usuarioId
+        }
+      }
+      
+      console.log('🔄 Buscando multas com filtros:', cleanFilters)
+      
+      // Buscar dados - CORREÇÃO: usar cleanFilters
       const [multasRes, usuariosRes] = await Promise.all([
-        apiService.getMultas(filters),
-        apiService.getUsuarios()
+        ApiService.getMultas(cleanFilters), // ← Usar cleanFilters aqui
+        ApiService.getUsuarios()
       ])
 
-      // Para cada multa, buscar informações do usuário e livro
-      const multasComDetalhes = await Promise.all(
-        multasRes.data.map(async (multa) => {
-          try {
-            const [usuarioRes, livroRes, emprestimoRes] = await Promise.all([
-              apiService.getUsuario(multa.usuario_id),
-              apiService.getLivro(multa.livro_id),
-              apiService.getEmprestimo(multa.emprestimos_id)
-            ])
-            return {
-              ...multa,
-              usuario_nome: usuarioRes.data.nome,
-              livro_titulo: livroRes.data.titulo,
-              data_devolucao: emprestimoRes.data.data_devolucao,
-              valor_numero: parseFloat(multa.valor)
-            }
-          } catch (error) {
-            return {
-              ...multa,
-              usuario_nome: 'Usuário não encontrado',
-              livro_titulo: 'Livro não encontrado',
-              data_devolucao: null,
-              valor_numero: parseFloat(multa.valor)
-            }
-          }
-        })
-      )
+      console.log('✅ Multas recebidas:', multasRes.data)
 
-      setMultas(multasComDetalhes)
+      // Simplificar os dados
+      const multasSimples = multasRes.data.map(multa => ({
+        ...multa,
+        usuario_nome: `Usuário #${multa.usuario_id}`,
+        livro_titulo: `Livro #${multa.livro_id}`,
+        valor_numero: parseFloat(multa.valor) || 0
+      }))
+
+      setMultas(multasSimples)
       setUsuarios(usuariosRes.data)
+      
     } catch (error) {
-      toast.error('Erro ao carregar multas')
-      console.error(error)
+      console.error('❌ Erro ao carregar multas:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      })
+      
+      // Mensagem de erro amigável
+      const errorMsg = error.response?.data?.message || 
+                      error.response?.data?.error || 
+                      'Erro ao carregar multas'
+      toast.error(`Multas: ${errorMsg}`)
+      
+      // Mostrar dados vazios
+      setMultas([])
+      
     } finally {
       setLoading(false)
     }
@@ -68,18 +79,19 @@ const Multas = () => {
     if (!window.confirm('Confirmar pagamento desta multa?')) return
 
     try {
-      await apiService.pagarMulta(id)
+      await ApiService.pagarMulta(id)
       toast.success('Multa paga com sucesso!')
       fetchData()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Erro ao pagar multa')
+      const errorMsg = error.response?.data?.message || 'Erro ao pagar multa'
+      toast.error(errorMsg)
     }
   }
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value || ''
+      [key]: value
     }))
   }
 
@@ -137,14 +149,14 @@ const Multas = () => {
         </div>
       </div>
 
-      {/* Filtros */}
+      {/* Filtros - CORRIGIDOS */}
       <div className="bg-white shadow rounded-lg p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status Pagamento</label>
             <select
               value={filters.pago}
-              onChange={(e) => handleFilterChange('pago', e.target.value === '' ? '' : e.target.value === 'true')}
+              onChange={(e) => handleFilterChange('pago', e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
             >
               <option value="">Todos</option>
@@ -161,7 +173,9 @@ const Multas = () => {
             >
               <option value="">Todos os usuários</option>
               {usuarios.map(usuario => (
-                <option key={usuario.id} value={usuario.id}>{usuario.nome}</option>
+                <option key={usuario.id} value={usuario.id}>
+                  {usuario.nome}
+                </option>
               ))}
             </select>
           </div>
@@ -182,130 +196,130 @@ const Multas = () => {
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Usuário
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Livro
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Valor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data Pagamento
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data Criação
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {multas.map((multa) => (
-                <tr key={multa.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    #{multa.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {multa.usuario_nome}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      ID: {multa.usuario_id}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {multa.livro_titulo}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      ID: {multa.livro_id}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {formatCurrency(multa.valor_numero)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPagoColor(multa.pago)}`}>
-                      {getPagoText(multa.pago)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {multa.data_pagamento ? formatDate(multa.data_pagamento) : '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(multa.created_at)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {!multa.pago && (
-                      <button
-                        onClick={() => handlePagar(multa.id)}
-                        className="text-green-600 hover:text-green-900 mr-3"
-                      >
-                        Marcar como Paga
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        const emprestimoId = multa.emprestimos_id
-                        navigator.clipboard.writeText(emprestimoId)
-                        toast.success('ID do empréstimo copiado!')
-                      }}
-                      className="text-blue-600 hover:text-blue-900"
-                      title="Copiar ID do empréstimo"
-                    >
-                      Copiar ID Empréstimo
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          {multas.length === 0 && (
+          {multas.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">Nenhuma multa encontrada</p>
             </div>
-          )}
+          ) : (
+            <>
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Usuário
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Livro
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Valor
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Data Pagamento
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Data Criação
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {multas.map((multa) => (
+                    <tr key={multa.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        #{multa.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {multa.usuario_nome}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          ID: {multa.usuario_id}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {multa.livro_titulo}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          ID: {multa.livro_id}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {formatCurrency(multa.valor_numero)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPagoColor(multa.pago)}`}>
+                          {getPagoText(multa.pago)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {multa.data_pagamento ? formatDate(multa.data_pagamento) : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDate(multa.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {!multa.pago && (
+                          <button
+                            onClick={() => handlePagar(multa.id)}
+                            className="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 text-sm mr-2"
+                          >
+                            Marcar como Paga
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            const emprestimoId = multa.emprestimos_id
+                            navigator.clipboard.writeText(emprestimoId)
+                            toast.success('ID do empréstimo copiado!')
+                          }}
+                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+                          title="Copiar ID do empréstimo"
+                        >
+                          Copiar ID
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-          {/* Resumo */}
-          {multas.length > 0 && (
-            <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
-              <div className="flex justify-between items-center">
-                <div>
-                  <span className="text-sm text-gray-600">
-                    Total de multas: <strong>{multas.length}</strong>
-                  </span>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm">
-                    <span className="text-gray-600">Em aberto: </span>
-                    <span className="font-bold text-red-600">{formatCurrency(calcularTotal())}</span>
-                  </div>
-                  <div className="text-sm mt-1">
-                    <span className="text-gray-600">Pagas: </span>
-                    <span className="font-bold text-green-600">
-                      {formatCurrency(
-                        multas
-                          .filter(m => m.pago)
-                          .reduce((total, multa) => total + multa.valor_numero, 0)
-                      )}
+              {/* Resumo */}
+              <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      Total de multas: <strong>{multas.length}</strong>
                     </span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm">
+                      <span className="text-gray-600">Em aberto: </span>
+                      <span className="font-bold text-red-600">{formatCurrency(calcularTotal())}</span>
+                    </div>
+                    <div className="text-sm mt-1">
+                      <span className="text-gray-600">Pagas: </span>
+                      <span className="font-bold text-green-600">
+                        {formatCurrency(
+                          multas
+                            .filter(m => m.pago)
+                            .reduce((total, multa) => total + multa.valor_numero, 0)
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       )}

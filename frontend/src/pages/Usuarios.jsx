@@ -9,7 +9,7 @@ const Usuarios = () => {
   const [showForm, setShowForm] = useState(false)
   const [editingUsuario, setEditingUsuario] = useState(null)
 
-  const apiService = new ApiService()
+  const apiService = ApiService
 
   useEffect(() => {
     fetchUsuarios()
