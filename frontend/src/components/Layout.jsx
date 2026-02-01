@@ -18,7 +18,7 @@ const Layout = () => {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <Link to="/" className="text-2xl font-bold text-blue-600">
-                Biblioteca System
+                SingletonBib
               </Link>
               <nav className="ml-10 flex space-x-4">
                 <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
