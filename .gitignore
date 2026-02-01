@@ -1,6 +1,6 @@
 /node_modules
 .env
-/testes
+/tests
 # variáveis de ambiente
 .env
 .env.*

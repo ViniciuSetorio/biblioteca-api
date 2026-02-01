@@ -12,6 +12,7 @@ import "./docs/usuarios.docs.js";
 import "./docs/livros.docs.js";
 import "./docs/reservas.docs.js";
 import "./docs/multas.docs.js";
+import "./docs/emprestimos.docs.js";
 
 const app = express();
 
