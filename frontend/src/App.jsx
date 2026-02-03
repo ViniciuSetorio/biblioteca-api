@@ -9,25 +9,40 @@ import Emprestimos from './pages/Emprestimos'
 import Reservas from './pages/Reservas'
 import Multas from './pages/Multas'
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <ToastContainer position="top-right" autoClose={3000} />
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="usuarios" element={<Usuarios />} />
-            <Route path="livros" element={<Livros />} />
-            <Route path="emprestimos" element={<Emprestimos />} />
-            <Route path="reservas" element={<Reservas />} />
-            <Route path="multas" element={<Multas />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <ToastContainer 
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+            toastClassName="dark:bg-gray-800 dark:text-white"
+          />
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="usuarios" element={<Usuarios />} />
+              <Route path="livros" element={<Livros />} />
+              <Route path="emprestimos" element={<Emprestimos />} />
+              <Route path="reservas" element={<Reservas />} />
+              <Route path="multas" element={<Multas />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 
