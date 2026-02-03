@@ -368,12 +368,6 @@ const Emprestimos = () => {
                               <CheckCircle size={14} />
                               <span>Devolver</span>
                             </button>
-                            <button
-                              onClick={() => calcularMulta(emprestimo.id)}
-                              className="px-3 py-1.5 text-sm bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-colors"
-                            >
-                              Calcular Multa
-                            </button>
                           </>
                         )}
                       </div>
