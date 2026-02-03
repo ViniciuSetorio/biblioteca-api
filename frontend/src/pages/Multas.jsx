@@ -53,8 +53,8 @@ const Multas = () => {
 
       const multasSimples = multasRes.data.map(multa => ({
         ...multa,
-        usuario_nome: `Usuário #${multa.usuario_id}`,
-        livro_titulo: `Livro #${multa.livro_id}`,
+        usuario_nome: multa.usuario_nome,
+        livro_titulo: multa.livro_titulo,
         valor_numero: parseFloat(multa.valor) || 0
       }))
 

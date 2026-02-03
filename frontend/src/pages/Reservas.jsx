@@ -66,9 +66,9 @@ const Reservas = () => {
 
       const reservasSimples = reservasRes.data.map(reserva => ({
         ...reserva,
-        usuario_nome: `Usuário #${reserva.usuario_id}`,
-        livro_titulo: `Livro #${reserva.livro_id}`,
-        usuario_email: ''
+        usuario_nome: reserva.usuario_nome,
+        livro_titulo: reserva.livro_titulo,
+        usuario_email: reserva.usuario_email
       }))
 
       setReservas(reservasSimples)
@@ -114,6 +114,7 @@ const Reservas = () => {
     
     return (
       reserva.usuario_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reserva.usuario_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       reserva.livro_titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       reserva.id.toString().includes(searchTerm)
     )

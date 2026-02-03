@@ -11,8 +11,17 @@ export const ReservaSchema = z.object({
   usuario_id: z.number().int().openapi({
     example: 1,
   }),
+  usuario_nome: z.string().openapi({
+    example: "João Silva",
+  }),
+  usuario_email: z.string().openapi({
+    example: "joao.silva@email.com"
+  }),
   livro_id: z.number().int().openapi({
     example: 2,
+  }),
+  livro_titulo: z.string().openapi({
+    example: "Clean Code",
   }),
   data_reserva: z.string().openapi({
     example: "2026-01-30T22:00:00.000Z",
