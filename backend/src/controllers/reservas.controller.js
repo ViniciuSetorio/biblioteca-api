@@ -14,8 +14,8 @@ const libraryManager = createLibraryManager();
 
 async function criarReserva(req, res) {
   try {
-    const filters = CriarReservaSchema.parse(req.query);
-    const reserva = await libraryManager.criarReserva(filters);
+    const body = CriarReservaSchema.parse(req.body);
+    const reserva = await libraryManager.criarReserva(body);
     return res.status(201).json(reserva);
   } catch (err) {
     if (err.statusCode) {
