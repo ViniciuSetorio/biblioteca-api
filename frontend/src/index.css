@@ -28,6 +28,7 @@
   --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: #42b883;
+  --vue-green-base: #217c3c1e;
 }
 
 /* Tema escuro */
@@ -47,6 +48,7 @@
   --border: #334155;
   --input: #334155;
   --ring: #42b883;
+  --vue-green-base: #217c3c93;
 }
 
 body {

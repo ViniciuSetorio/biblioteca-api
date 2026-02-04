@@ -209,8 +209,8 @@ const Dashboard = () => {
         <StatCard
           title="Livros"
           value={stats.livros}
-          icon={<BookOpen className="text-vue-green" size={24} />}
-          color="bg-vue-green"
+          icon={<BookOpen className="text-green-500" size={24} />}
+          color="bg-green-500"
           subtitle={`No catálogo`}
         />
         <StatCard
