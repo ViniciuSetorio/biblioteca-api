@@ -15,9 +15,13 @@ import {
   Calendar
 } from 'lucide-react'
 
+// Importar ou definir o PDFGenerator
+import { PDFGenerator, generateMultasReport } from '../utils/pdfGenerator' // Ajuste o caminho conforme necessário
+
 const Multas = () => {
   const [multas, setMultas] = useState([])
   const [usuarios, setUsuarios] = useState([])
+  const [livros, setLivros] = useState([]) // Adicionar estado para livros
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
     pago: '',
@@ -46,9 +50,10 @@ const Multas = () => {
         }
       }
       
-      const [multasRes, usuariosRes] = await Promise.all([
+      const [multasRes, usuariosRes, livrosRes] = await Promise.all([
         ApiService.getMultas(cleanFilters),
-        ApiService.getUsuarios()
+        ApiService.getUsuarios(),
+        ApiService.getLivros() // Adicionar chamada para livros
       ])
 
       const multasSimples = multasRes.data.map(multa => ({
@@ -60,19 +65,84 @@ const Multas = () => {
 
       setMultas(multasSimples)
       setUsuarios(usuariosRes.data)
+      setLivros(livrosRes.data || []) // Armazenar livros
       
     } catch (error) {
-      console.error('❌ Erro ao carregar multas:', error)
+      console.error('Erro ao carregar multas:', error)
       const errorMsg = error.response?.data?.message || 
                       error.response?.data?.error || 
                       'Erro ao carregar multas'
       toast.error(`Multas: ${errorMsg}`)
       
       setMultas([])
+      setLivros([]) // Resetar livros em caso de erro
       
     } finally {
       setLoading(false)
     }
+  }
+
+  // Função para gerar relatório PDF
+  const handleExportPDF = () => {
+    try {
+      // Usar as multas filtradas ou todas as multas
+      const multasParaExportar = filteredMultas.length > 0 ? filteredMultas : multas
+      
+      // Criar relatório usando a função importada
+      const pdfReport = generateMultasReport(multasParaExportar, usuarios, livros)
+      
+      // Gerar nome do arquivo com data e hora
+      const now = new Date()
+      const filename = `Relatorio_Multas_${now.getFullYear()}_${(now.getMonth() + 1).toString().padStart(2, '0')}_${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`
+      
+      // Salvar/abrir PDF
+      pdfReport.saveAsPDF(filename)
+      
+      toast.success('Relatório gerado com sucesso!')
+      
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error)
+      toast.error('Erro ao gerar relatório PDF')
+      
+      // Fallback: Criar PDF básico se a função específica falhar
+      const fallbackPDF = new PDFGenerator()
+      fallbackPDF.addHeader('Relatório de Multas', 'Sistema de Gerenciamento de Biblioteca')
+      
+      const stats = calcularEstatisticas()
+      fallbackPDF.addSection('Resumo', `
+        <div style="background:#f8f9fa;padding:15px;border-radius:5px;">
+          <p><strong>Total de Multas:</strong> ${stats.total}</p>
+          <p><strong>Multas em Aberto:</strong> ${stats.emAberto}</p>
+          <p><strong>Multas Pagas:</strong> ${stats.pagas}</p>
+          <p><strong>Valor Total:</strong> R$ ${stats.valorTotal.toFixed(2)}</p>
+        </div>
+      `)
+      
+      if (filteredMultas.length > 0) {
+        const headers = ['ID', 'Usuário', 'Livro', 'Valor', 'Status', 'Data']
+        const data = filteredMultas.map(multa => [
+          multa.id,
+          multa.usuario_nome,
+          multa.livro_titulo,
+          `R$ ${multa.valor_numero.toFixed(2)}`,
+          multa.pago ? 'Paga' : 'Em Aberto',
+          formatDate(multa.created_at)
+        ])
+        fallbackPDF.addTable(headers, data)
+      }
+      
+      fallbackPDF.saveAsPDF('Relatorio_Multas_Backup')
+    }
+  }
+
+  // Função para calcular estatísticas
+  const calcularEstatisticas = () => {
+    const total = multas.length
+    const emAberto = multas.filter(m => !m.pago).length
+    const pagas = multas.filter(m => m.pago).length
+    const valorTotal = multas.reduce((total, multa) => total + multa.valor_numero, 0)
+    
+    return { total, emAberto, pagas, valorTotal }
   }
 
   const handlePagar = async (id) => {
@@ -143,9 +213,12 @@ const Multas = () => {
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          <button className="px-5 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center space-x-2">
+          <button 
+            onClick={handleExportPDF}
+            className="px-5 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center space-x-2"
+          >
             <Download size={18} />
-            <span>Relatório</span>
+            <span>Relatório PDF</span>
           </button>
         </div>
       </div>
