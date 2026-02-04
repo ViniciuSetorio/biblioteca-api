@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import ApiService from '../config/api'
 import LivroForm from '../components/forms/LivroForm'
+import { PDFGenerator, generateLivrosReport } from '../utils/pdfGenerator'
 import { 
   Search, 
   Filter, 
@@ -45,6 +46,97 @@ const Livros = () => {
       console.error('Erro ao carregar livros:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Função para gerar relatório PDF
+  const handleExportPDF = () => {
+    try {
+      // Usar os livros filtrados ou todos os livros
+      const livrosParaExportar = filteredLivros.length > 0 ? filteredLivros : livros
+      
+      // Obter categorias únicas
+      const categoriasUnicas = [...new Set(livrosParaExportar.map(l => l.categoria).filter(Boolean))]
+      
+      // Calcular estatísticas atualizadas
+      const statsAtualizadas = {
+        total: livrosParaExportar.length,
+        disponiveis: livrosParaExportar.filter(l => l.copias_disponiveis > 0).length,
+        emprestados: livrosParaExportar.filter(l => l.copias_disponiveis === 0).length,
+        novos: livrosParaExportar.filter(l => {
+          if (!l.created_at) return false
+          const livroDate = new Date(l.created_at)
+          const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          return livroDate > trintaDiasAtras
+        }).length
+      }
+      
+      // Criar relatório usando a função importada
+      const pdfReport = generateLivrosReport(livrosParaExportar, categoriasUnicas, statsAtualizadas)
+      
+      // Gerar nome do arquivo com data e hora
+      const now = new Date()
+      const filename = `Relatorio_Livros_${now.getFullYear()}_${(now.getMonth() + 1).toString().padStart(2, '0')}_${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`
+      
+      // Salvar/abrir PDF
+      pdfReport.saveAsPDF(filename)
+      
+      toast.success('Relatório de livros gerado com sucesso!')
+      
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error)
+      toast.error('Erro ao gerar relatório PDF')
+      
+      // Fallback: Criar PDF básico se a função específica falhar
+      try {
+        const fallbackPDF = new PDFGenerator()
+        fallbackPDF.addHeader('Relatório de Livros', 'Catálogo da Biblioteca')
+        
+        // Estatísticas básicas
+        const stats = calcularEstatisticas()
+        fallbackPDF.addSection('Resumo do Catálogo', `
+          <div style="background:#f8f9fa;padding:15px;border-radius:5px;">
+            <p><strong>Total de Livros:</strong> ${stats.total}</p>
+            <p><strong>Livros Disponíveis:</strong> ${stats.disponiveis}</p>
+            <p><strong>Livros Emprestados:</strong> ${stats.emprestados}</p>
+            <p><strong>Novos (30 dias):</strong> ${stats.novos}</p>
+          </div>
+        `)
+        
+        if (filteredLivros.length > 0) {
+          const headers = ['Título', 'Autor', 'Categoria', 'Cópias', 'Status', 'ISBN']
+          const data = filteredLivros.map(livro => [
+            livro.titulo,
+            livro.autor,
+            livro.categoria || 'Sem categoria',
+            livro.copias_disponiveis.toString(),
+            livro.copias_disponiveis > 0 ? 'Disponível' : 'Indisponível',
+            livro.isbn || 'N/A'
+          ])
+          fallbackPDF.addTable(headers, data)
+        }
+        
+        fallbackPDF.saveAsPDF('Relatorio_Livros_Backup')
+      } catch (fallbackError) {
+        console.error('Erro no fallback PDF:', fallbackError)
+        toast.error('Não foi possível gerar o relatório')
+      }
+    }
+  }
+
+  // Função para calcular estatísticas
+  const calcularEstatisticas = () => {
+    const livrosParaCalcular = filteredLivros.length > 0 ? filteredLivros : livros
+    return {
+      total: livrosParaCalcular.length,
+      disponiveis: livrosParaCalcular.filter(l => l.copias_disponiveis > 0).length,
+      emprestados: livrosParaCalcular.filter(l => l.copias_disponiveis === 0).length,
+      novos: livrosParaCalcular.filter(l => {
+        if (!l.created_at) return false
+        const livroDate = new Date(l.created_at)
+        const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        return livroDate > trintaDiasAtras
+      }).length
     }
   }
 
@@ -117,13 +209,22 @@ const Livros = () => {
             Gerencie o catálogo de livros da biblioteca
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-5 py-2.5 bg-gradient-to-r from-vue-green to-vue-blue text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2"
-        >
-          <Plus size={18} />
-          <span>Novo Livro</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleExportPDF}
+            className="px-5 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center space-x-2"
+          >
+            <Download size={18} />
+            <span>Relatório PDF</span>
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-5 py-2.5 bg-gradient-to-r from-vue-green to-vue-blue text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2"
+          >
+            <Plus size={18} />
+            <span>Novo Livro</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -223,7 +324,10 @@ const Livros = () => {
               </button>
             </div>
 
-            <button className="px-4 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center space-x-2">
+            <button 
+              onClick={handleExportPDF}
+              className="px-4 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center space-x-2"
+            >
               <Download size={16} />
               <span>Exportar</span>
             </button>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import ApiService from '../config/api'
 import UsuarioForm from '../components/forms/UsuarioForm'
+import { PDFGenerator, generateUsuariosReport } from '../utils/pdfGenerator'
 import { 
   Search, 
   Filter, 
@@ -40,6 +41,94 @@ const Usuarios = () => {
       console.error(error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Função para gerar relatório PDF
+  const handleExportPDF = () => {
+    try {
+      // Usar os usuários filtrados ou todos os usuários
+      const usuariosParaExportar = filteredUsuarios.length > 0 ? filteredUsuarios : usuarios
+      
+      // Calcular estatísticas atualizadas
+      const statsAtualizadas = {
+        total: usuariosParaExportar.length,
+        bibliotecarios: usuariosParaExportar.filter(u => u.cargo === 'bibliotecario').length,
+        membros: usuariosParaExportar.filter(u => u.cargo === 'membro').length,
+        novos: usuariosParaExportar.filter(u => {
+          if (!u.created_at) return false
+          const usuarioDate = new Date(u.created_at)
+          const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          return usuarioDate > trintaDiasAtras
+        }).length
+      }
+      
+      // Criar relatório usando a função importada
+      const pdfReport = generateUsuariosReport(usuariosParaExportar, statsAtualizadas)
+      
+      // Gerar nome do arquivo com data e hora
+      const now = new Date()
+      const filename = `Relatorio_Usuarios_${now.getFullYear()}_${(now.getMonth() + 1).toString().padStart(2, '0')}_${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`
+      
+      // Salvar/abrir PDF
+      pdfReport.saveAsPDF(filename)
+      
+      toast.success('Relatório de usuários gerado com sucesso!')
+      
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error)
+      toast.error('Erro ao gerar relatório PDF')
+      
+      // Fallback: Criar PDF básico se a função específica falhar
+      try {
+        const fallbackPDF = new PDFGenerator()
+        fallbackPDF.addHeader('Relatório de Usuários', 'Cadastro de Usuários do Sistema')
+        
+        // Estatísticas básicas
+        const stats = calcularEstatisticas()
+        fallbackPDF.addSection('Resumo do Cadastro', `
+          <div style="background:#f8f9fa;padding:15px;border-radius:5px;">
+            <p><strong>Total de Usuários:</strong> ${stats.total}</p>
+            <p><strong>Bibliotecários:</strong> ${stats.bibliotecarios}</p>
+            <p><strong>Membros:</strong> ${stats.membros}</p>
+            <p><strong>Novos (30 dias):</strong> ${stats.novos}</p>
+          </div>
+        `)
+        
+        if (filteredUsuarios.length > 0) {
+          const headers = ['ID', 'Nome', 'E-mail', 'Cargo', 'Data Cadastro', 'Status']
+          const data = filteredUsuarios.map(usuario => [
+            usuario.id,
+            usuario.nome,
+            usuario.email,
+            usuario.cargo === 'bibliotecario' ? 'Bibliotecário' : 'Membro',
+            new Date(usuario.created_at).toLocaleDateString('pt-BR'),
+            'Ativo'
+          ])
+          fallbackPDF.addTable(headers, data)
+        }
+        
+        fallbackPDF.saveAsPDF('Relatorio_Usuarios_Backup')
+      } catch (fallbackError) {
+        console.error('Erro no fallback PDF:', fallbackError)
+        toast.error('Não foi possível gerar o relatório')
+      }
+    }
+  }
+
+  // Função para calcular estatísticas
+  const calcularEstatisticas = () => {
+    const usuariosParaCalcular = filteredUsuarios.length > 0 ? filteredUsuarios : usuarios
+    return {
+      total: usuariosParaCalcular.length,
+      bibliotecarios: usuariosParaCalcular.filter(u => u.cargo === 'bibliotecario').length,
+      membros: usuariosParaCalcular.filter(u => u.cargo === 'membro').length,
+      novos: usuariosParaCalcular.filter(u => {
+        if (!u.created_at) return false
+        const usuarioDate = new Date(u.created_at)
+        const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        return usuarioDate > trintaDiasAtras
+      }).length
     }
   }
 
@@ -110,13 +199,22 @@ const Usuarios = () => {
             Gerencie os usuários do sistema bibliotecário
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-5 py-2.5 bg-gradient-to-r from-vue-green to-vue-blue text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2"
-        >
-          <Plus size={18} />
-          <span>Novo Usuário</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleExportPDF}
+            className="px-5 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center space-x-2"
+          >
+            <Download size={18} />
+            <span>Relatório PDF</span>
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-5 py-2.5 bg-gradient-to-r from-vue-green to-vue-blue text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2"
+          >
+            <Plus size={18} />
+            <span>Novo Usuário</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -196,7 +294,10 @@ const Usuarios = () => {
               <option value="bibliotecario">Bibliotecário</option>
             </select>
 
-            <button className="px-4 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center space-x-2">
+            <button 
+              onClick={handleExportPDF}
+              className="px-4 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center space-x-2"
+            >
               <Download size={16} />
               <span>Exportar</span>
             </button>

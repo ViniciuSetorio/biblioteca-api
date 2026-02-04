@@ -485,3 +485,280 @@ export const generateDashboardReport = (stats, allData) => {
 
   return pdf
 }
+
+export const generateLivrosReport = (livros, categorias, stats) => {
+  const pdf = new PDFGenerator()
+  
+  // Header
+  pdf.addHeader(
+    'Relatório de Livros - Catálogo da Biblioteca',
+    'Sistema de Gerenciamento de Biblioteca'
+  )
+  
+  // Estatísticas do catálogo
+  pdf.addSection('Resumo Estatístico do Catálogo', `
+    <div class="summary">
+      <div class="summary-item">
+        <span>Total de Livros:</span>
+        <strong>${stats.total}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Livros Disponíveis:</span>
+        <strong class="status-ativo">${stats.disponiveis}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Livros Emprestados:</span>
+        <strong class="status-atrasado">${stats.emprestados}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Novos Livros (30 dias):</span>
+        <strong>${stats.novos}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Taxa de Disponibilidade:</span>
+        <strong>${stats.total > 0 ? Math.round((stats.disponiveis / stats.total) * 100) : 0}%</strong>
+      </div>
+    </div>
+  `)
+
+  // Distribuição por categorias
+  if (categorias && categorias.length > 0) {
+    const categoriaStats = categorias.map(categoria => {
+      const count = livros.filter(l => l.categoria === categoria).length
+      const porcentagem = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0
+      return { categoria, count, porcentagem }
+    })
+
+    pdf.addSection('Distribuição por Categoria', `
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Categoria</th>
+              <th>Quantidade</th>
+              <th>Porcentagem</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${categoriaStats.map(stat => `
+              <tr>
+                <td>${stat.categoria}</td>
+                <td>${stat.count}</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 100px; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden;">
+                      <div style="width: ${stat.porcentagem}%; height: 100%; background: linear-gradient(to right, #42b883, #35495e);"></div>
+                    </div>
+                    <span>${stat.porcentagem}%</span>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `)
+  }
+
+  // Tabela de Livros
+  if (livros.length > 0) {
+    const headers = ['ID', 'Título', 'Autor', 'Categoria', 'Cópias', 'Status', 'ISBN', 'Publicado']
+    
+    const data = livros.map(livro => {
+      const statusClass = livro.copias_disponiveis > 0 ? 'status-ativo' : 'status-atrasado'
+      const statusText = livro.copias_disponiveis > 0 ? '✅ Disponível' : '❌ Indisponível'
+      
+      return [
+        `#${livro.id}`,
+        livro.titulo,
+        livro.autor,
+        livro.categoria || 'Sem categoria',
+        livro.copias_disponiveis.toString(),
+        `<span class="${statusClass}">${statusText}</span>`,
+        livro.isbn || 'N/A',
+        livro.publicado_em ? new Date(livro.publicado_em).toLocaleDateString('pt-BR') : 'N/A'
+      ]
+    })
+    
+    pdf.addTable(headers, data)
+  } else {
+    pdf.addSection('Lista de Livros', `
+      <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #666; margin-bottom: 10px;">Nenhum livro encontrado</h3>
+        <p style="color: #888;">O catálogo de livros está vazio.</p>
+      </div>
+    `)
+  }
+
+  // Resumo adicional
+  pdf.addSection('Resumo do Catálogo', `
+    <div class="summary">
+      <div class="summary-item">
+        <span>Data de Geração do Relatório:</span>
+        <strong>${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Categorias Únicas:</span>
+        <strong>${categorias?.length || 0}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Livros Sem Categoria:</span>
+        <strong>${livros.filter(l => !l.categoria).length}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Livros Sem ISBN:</span>
+        <strong>${livros.filter(l => !l.isbn).length}</strong>
+      </div>
+    </div>
+  `)
+
+  return pdf
+}
+
+export const generateUsuariosReport = (usuarios, stats) => {
+  const pdf = new PDFGenerator()
+  
+  // Header
+  pdf.addHeader(
+    'Relatório de Usuários - Sistema Bibliotecário',
+    'Cadastro de Usuários do Sistema'
+  )
+  
+  // Estatísticas do cadastro
+  pdf.addSection('Resumo Estatístico do Cadastro', `
+    <div class="summary">
+      <div class="summary-item">
+        <span>Total de Usuários:</span>
+        <strong>${stats.total}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Bibliotecários:</span>
+        <strong class="status-ativo">${stats.bibliotecarios}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Membros:</span>
+        <strong>${stats.membros}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Novos Usuários (30 dias):</span>
+        <strong class="status-ativo">${stats.novos}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Porcentagem de Bibliotecários:</span>
+        <strong>${stats.total > 0 ? Math.round((stats.bibliotecarios / stats.total) * 100) : 0}%</strong>
+      </div>
+      <div class="summary-item">
+        <span>Taxa de Crescimento Mensal:</span>
+        <strong>${stats.total > 10 ? Math.round((stats.novos / stats.total) * 100) : stats.novos > 0 ? '100%' : '0%'}</strong>
+      </div>
+    </div>
+  `)
+
+  // Distribuição por período
+  const usuariosPorPeriodo = {
+    'Últimos 7 dias': usuarios.filter(u => {
+      if (!u.created_at) return false
+      const usuarioDate = new Date(u.created_at)
+      const seteDiasAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      return usuarioDate > seteDiasAtras
+    }).length,
+    'Últimos 30 dias': stats.novos,
+    'Últimos 90 dias': usuarios.filter(u => {
+      if (!u.created_at) return false
+      const usuarioDate = new Date(u.created_at)
+      const noventaDiasAtras = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+      return usuarioDate > noventaDiasAtras
+    }).length,
+    'Mais de 90 dias': usuarios.filter(u => {
+      if (!u.created_at) return false
+      const usuarioDate = new Date(u.created_at)
+      const noventaDiasAtras = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+      return usuarioDate <= noventaDiasAtras
+    }).length
+  }
+
+  pdf.addSection('Distribuição por Período de Cadastro', `
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Período</th>
+            <th>Quantidade</th>
+            <th>Porcentagem</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(usuariosPorPeriodo).map(([periodo, quantidade]) => {
+            const porcentagem = stats.total > 0 ? Math.round((quantidade / stats.total) * 100) : 0
+            return `
+              <tr>
+                <td>${periodo}</td>
+                <td>${quantidade}</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 100px; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden;">
+                      <div style="width: ${porcentagem}%; height: 100%; background: linear-gradient(to right, #42b883, #35495e);"></div>
+                    </div>
+                    <span>${porcentagem}%</span>
+                  </div>
+                </td>
+              </tr>
+            `
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `)
+
+  // Tabela de Usuários
+  if (usuarios.length > 0) {
+    const headers = ['ID', 'Nome', 'E-mail', 'Cargo', 'Data Cadastro', 'Status']
+    
+    const data = usuarios.map(usuario => {
+      const cargoClass = usuario.cargo === 'bibliotecario' ? 'status-ativo' : 'status-devolvido'
+      const cargoText = usuario.cargo === 'bibliotecario' ? '📚 Bibliotecário' : '👤 Membro'
+      
+      return [
+        `#${usuario.id}`,
+        usuario.nome,
+        usuario.email,
+        `<span class="${cargoClass}">${cargoText}</span>`,
+        usuario.created_at ? new Date(usuario.created_at).toLocaleDateString('pt-BR') : 'N/A',
+        '✅ Ativo'
+      ]
+    })
+    
+    pdf.addTable(headers, data)
+  } else {
+    pdf.addSection('Lista de Usuários', `
+      <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #666; margin-bottom: 10px;">Nenhum usuário encontrado</h3>
+        <p style="color: #888;">O cadastro de usuários está vazio.</p>
+      </div>
+    `)
+  }
+
+  // Resumo adicional
+  pdf.addSection('Informações Adicionais', `
+    <div class="summary">
+      <div class="summary-item">
+        <span>Data de Geração do Relatório:</span>
+        <strong>${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Total de Domínios de E-mail Únicos:</span>
+        <strong>${[...new Set(usuarios.map(u => u.email?.split('@')[1]).filter(Boolean))].length}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Usuários Sem Cargo Definido:</span>
+        <strong>${usuarios.filter(u => !u.cargo).length}</strong>
+      </div>
+      <div class="summary-item">
+        <span>Média de Usuários por Dia (30 dias):</span>
+        <strong>${(stats.novos / 30).toFixed(1)}</strong>
+      </div>
+    </div>
+  `)
+
+  return pdf
+}
