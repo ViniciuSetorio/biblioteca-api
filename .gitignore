@@ -1,9 +1,12 @@
 /node_modules
-
+.env
 # testes Idelmar
 src/app.js
 src/app.smoke.test.js
 /tests
+# variáveis de ambiente
+.env.*
+!.env.example
 
 # logs
 logs/
