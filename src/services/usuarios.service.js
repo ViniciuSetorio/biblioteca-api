@@ -131,6 +131,19 @@ export default function createUsuariosService(db) {
       );
     }
 
+    const { rowCount: cadastroAtivo } = await db.query(
+      `
+      SELECT 1
+      FROM livros
+      WHERE criado_por = $1
+      `,
+      [id],
+    );
+
+    if (cadastroAtivo > 0) {
+      throw ConflictError("Bibliotecário cadastrou livro(s)", "USER_HAS_ACTIVE_REGISTER")
+    } 
+
     const { rows } = await db.query(
       `
       DELETE FROM usuarios

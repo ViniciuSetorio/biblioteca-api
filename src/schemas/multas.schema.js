@@ -12,8 +12,8 @@ export const MultaSchema = z.object({
     example: 5,
     description: "ID do empréstimo que gerou a multa",
   }),
-  valor: z.string().openapi({
-    example: "20.00",
+  valor: z.number().openapi({
+    example: 20.00,
     description: "Valor da multa em reais (R$ 2,00 por dia de atraso)",
   }),
   pago: z.boolean().openapi({
@@ -32,9 +32,17 @@ export const MultaSchema = z.object({
     example: 1,
     description: "ID do usuário que deve pagar a multa",
   }),
+  usuario_nome: z.string().openapi({
+    example: "João Silva",
+    description: "Nome do usuário que deve pagar a multa",
+  }),
   livro_id: z.number().int().openapi({
     example: 2,
     description: "ID do livro relacionado ao empréstimo",
+  }),
+  livro_titulo: z.string().openapi({
+    example: "Clean Code",
+    description: "Título do livro relacionado ao empréstimo",
   }),
 });
 

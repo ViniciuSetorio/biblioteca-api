@@ -1,9 +1,11 @@
 export default function createMultasService(db) {
   async function listarMultas(filters = {}) {
     let query = `
-      SELECT m.*, e.usuario_id, e.livro_id
+      SELECT m.*, e.usuario_id, e.livro_id, u.nome as usuario_nome, l.titulo as livro_titulo
       FROM multas m
       JOIN emprestimos e ON m.emprestimos_id = e.id
+      JOIN usuarios u ON e.usuario_id = u.id
+      JOIN livros l ON e.livro_id = l.id
       WHERE 1=1
     `;
 
@@ -29,9 +31,11 @@ export default function createMultasService(db) {
   async function buscarMultaPorId(id) {
     const { rows, rowCount } = await db.query(
       `
-      SELECT m.*, e.usuario_id, e.livro_id
+      SELECT m.*, e.usuario_id, e.livro_id, u.nome as usuario_nome, l.titulo as livro_titulo
       FROM multas m
       JOIN emprestimos e ON m.emprestimos_id = e.id
+      JOIN usuarios u ON e.usuario_id = u.id
+      JOIN livros l ON e.livro_id = l.id
       WHERE m.id = $1
       `,
       [id],
