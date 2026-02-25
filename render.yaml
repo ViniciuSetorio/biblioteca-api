@@ -32,7 +32,7 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: biblioteca-usuarios-db
+          name: usuarios-db
           property: connectionString
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
@@ -50,7 +50,7 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: biblioteca-livros-db
+          name: livros-db
           property: connectionString
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
@@ -70,7 +70,7 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: biblioteca-emprestimos-db
+          name: emprestimos-db
           property: connectionString
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
@@ -94,7 +94,7 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: biblioteca-multas-db
+          name: multas-db
           property: connectionString
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
@@ -118,22 +118,22 @@ services:
         value: https://biblioteca-livros.onrender.com
 
 databases:
-  - name: biblioteca-usuarios-db
+  - name: usuarios-db
     databaseName: usuarios_db
     user: postgres
     plan: free
 
-  - name: biblioteca-livros-db
+  - name: livros-db
     databaseName: livros_db
     user: postgres
     plan: free
 
-  - name: biblioteca-emprestimos-db
+  - name: emprestimos-db
     databaseName: emprestimos_db
     user: postgres
     plan: free
 
-  - name: biblioteca-multas-db
+  - name: multas-db
     databaseName: multas_db
     user: postgres
     plan: free
