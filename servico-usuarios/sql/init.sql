@@ -5,3 +5,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   cargo VARCHAR(50) CHECK (cargo IN ('bibliotecario', 'membro')) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+INSERT INTO usuarios (nome, email, cargo) 
+VALUES ('Admin Biblioteca', 'admin@biblioteca.com', 'bibliotecario')
+ON CONFLICT (email) DO NOTHING;

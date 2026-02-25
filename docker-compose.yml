@@ -1,125 +1,322 @@
-version: '3.8'
-
 services:
+  # API Gateway
   gateway:
     build: ./api-gateway
+    container_name: biblioteca-gateway
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - USUARIOS_URL=http://servico-usuarios:3001
+      - LIVROS_URL=http://servico-livros:3002
+      - EMPRESTIMOS_URL=http://servico-emprestimos:3003
+      - MULTAS_URL=http://servico-multas:3004
     depends_on:
       - servico-usuarios
       - servico-livros
       - servico-emprestimos
       - servico-multas
       - servico-notificacoes
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
+  # Serviço de Usuários
   servico-usuarios:
     build: ./servico-usuarios
+    container_name: biblioteca-usuarios
     ports:
       - "3001:3001"
     environment:
+      - NODE_ENV=production
       - PGUSER=postgres
       - PGHOST=postgres_usuarios
       - PGDATABASE=usuarios_db
-      - PGPASSWORD=secret
+      - PGPASSWORD=postgres
       - PGPORT=5432
+      - EMPRESTIMOS_SERVICE_URL=http://servico-emprestimos:3003
     depends_on:
-      - postgres_usuarios
+      postgres_usuarios:
+        condition: service_healthy
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/usuarios"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
+  # Serviço de Livros
   servico-livros:
     build: ./servico-livros
+    container_name: biblioteca-livros
     ports:
       - "3002:3002"
     environment:
+      - NODE_ENV=production
       - PGUSER=postgres
       - PGHOST=postgres_livros
       - PGDATABASE=livros_db
-      - PGPASSWORD=secret
+      - PGPASSWORD=postgres
       - PGPORT=5432
+      - USUARIOS_SERVICE_URL=http://servico-usuarios:3001
+      - EMPRESTIMOS_SERVICE_URL=http://servico-emprestimos:3003
     depends_on:
-      - postgres_livros
-      - servico-usuarios
+      postgres_livros:
+        condition: service_healthy
+      servico-usuarios:
+        condition: service_started
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/livros"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
+  # Serviço de Empréstimos
   servico-emprestimos:
     build: ./servico-emprestimos
+    container_name: biblioteca-emprestimos
     ports:
       - "3003:3003"
     environment:
+      - NODE_ENV=production
       - PGUSER=postgres
       - PGHOST=postgres_emprestimos
       - PGDATABASE=emprestimos_db
-      - PGPASSWORD=secret
+      - PGPASSWORD=postgres
       - PGPORT=5432
+      - USUARIOS_SERVICE_URL=http://servico-usuarios:3001
+      - LIVROS_SERVICE_URL=http://servico-livros:3002
+      - MULTAS_SERVICE_URL=http://servico-multas:3004
+      - NOTIFICACOES_SERVICE_URL=http://servico-notificacoes:3005
     depends_on:
-      - postgres_emprestimos
-      - servico-usuarios
-      - servico-livros
-      - servico-multas
-      - servico-notificacoes
+      postgres_emprestimos:
+        condition: service_healthy
+      servico-usuarios:
+        condition: service_started
+      servico-livros:
+        condition: service_started
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/emprestimos"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
+  # Serviço de Multas
   servico-multas:
     build: ./servico-multas
+    container_name: biblioteca-multas
     ports:
       - "3004:3004"
     environment:
+      - NODE_ENV=production
       - PGUSER=postgres
       - PGHOST=postgres_multas
       - PGDATABASE=multas_db
-      - PGPASSWORD=secret
+      - PGPASSWORD=postgres
       - PGPORT=5432
+      - EMPRESTIMOS_SERVICE_URL=http://servico-emprestimos:3003
     depends_on:
-      - postgres_multas
-      - servico-emprestimos
+      postgres_multas:
+        condition: service_healthy
+      servico-emprestimos:
+        condition: service_started
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3004/multas"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
+  # Serviço de Notificações
   servico-notificacoes:
     build: ./servico-notificacoes
+    container_name: biblioteca-notificacoes
     ports:
       - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - DEBUG=true
+      - USUARIOS_SERVICE_URL=http://servico-usuarios:3001
+      - EMPRESTIMOS_SERVICE_URL=http://servico-emprestimos:3003
+      - LIVROS_SERVICE_URL=http://servico-livros:3002
+      # Configurações de email (opcional)
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=notificacoes@biblioteca.com
+      - SMTP_PASS=sua_senha_aqui
+      - EMAIL_FROM=sistema@biblioteca.com
+    depends_on:
+      - servico-usuarios
+      - servico-emprestimos
+      - servico-livros
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/notificacoes"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # Bancos de dados
+  # Banco de Dados - Usuários
   postgres_usuarios:
     image: postgres:15-alpine
+    container_name: postgres-usuarios
     environment:
-      POSTGRES_DB: usuarios_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=usuarios_db
+    ports:
+      - "5432:5432"  # Mapeado para porta diferente? Cuidado com conflitos
     volumes:
       - usuarios_data:/var/lib/postgresql/data
       - ./servico-usuarios/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Banco de Dados - Livros
   postgres_livros:
     image: postgres:15-alpine
+    container_name: postgres-livros
     environment:
-      POSTGRES_DB: livros_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=livros_db
+    ports:
+      - "5433:5432"
     volumes:
       - livros_data:/var/lib/postgresql/data
       - ./servico-livros/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Banco de Dados - Empréstimos
   postgres_emprestimos:
     image: postgres:15-alpine
+    container_name: postgres-emprestimos
     environment:
-      POSTGRES_DB: emprestimos_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=emprestimos_db
+    ports:
+      - "5434:5432"
     volumes:
       - emprestimos_data:/var/lib/postgresql/data
       - ./servico-emprestimos/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Banco de Dados - Multas
   postgres_multas:
     image: postgres:15-alpine
+    container_name: postgres-multas
     environment:
-      POSTGRES_DB: multas_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=multas_db
+    ports:
+      - "5435:5432"
     volumes:
       - multas_data:/var/lib/postgresql/data
       - ./servico-multas/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin (opcional - para gerenciar os bancos)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: biblioteca-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@biblioteca.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres_usuarios
+      - postgres_livros
+      - postgres_emprestimos
+      - postgres_multas
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  # Redis (opcional - para cache/filas)
+  redis:
+    image: redis:7-alpine
+    container_name: biblioteca-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - biblioteca-network
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+networks:
+  biblioteca-network:
+    driver: bridge
+    name: biblioteca-network
 
 volumes:
   usuarios_data:
+    name: biblioteca-usuarios-data
   livros_data:
+    name: biblioteca-livros-data
   emprestimos_data:
+    name: biblioteca-emprestimos-data
   multas_data:
+    name: biblioteca-multas-data
+  pgadmin_data:
+    name: biblioteca-pgadmin-data
+  redis_data:
+    name: biblioteca-redis-data

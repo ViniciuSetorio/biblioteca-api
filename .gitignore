@@ -5,7 +5,7 @@ src/app.js
 src/app.smoke.test.js
 /tests
 # variáveis de ambiente
-.env
+.env*
 .env.*
 !.env.example
 

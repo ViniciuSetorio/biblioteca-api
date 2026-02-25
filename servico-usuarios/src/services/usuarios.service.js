@@ -2,7 +2,7 @@ import {
   ConflictError,
   NotFoundError,
   UnprocessableEntityError,
-} from "../utils/httpError.js";
+} from "../../../utils/httpError.js";
 
 export default function createUsuariosService(db) {
   async function buscarUsuarios() {
@@ -21,7 +21,6 @@ export default function createUsuariosService(db) {
        WHERE id = $1`,
       [id],
     );
-
     if (rowCount === 0) return null;
     return rows[0];
   }
@@ -34,7 +33,6 @@ export default function createUsuariosService(db) {
          RETURNING id, nome, email, cargo, created_at`,
         [nome, email, cargo],
       );
-
       return rows[0];
     } catch (error) {
       if (error.code === "23505") {
@@ -46,7 +44,6 @@ export default function createUsuariosService(db) {
 
   async function modificarUsuario(id, data) {
     const usuarioAtual = await this.buscarUsuarioPorId(id);
-
     if (!usuarioAtual) {
       throw NotFoundError("Usuário não encontrado", "USER_NOT_FOUND");
     }
@@ -66,10 +63,7 @@ export default function createUsuariosService(db) {
       }
     }
 
-    if (campos.length === 0) {
-      return usuarioAtual;
-    }
-
+    if (campos.length === 0) return usuarioAtual;
     valores.push(id);
 
     try {
@@ -80,7 +74,6 @@ export default function createUsuariosService(db) {
          RETURNING id, nome, email, cargo, created_at`,
         valores,
       );
-
       return rows[0];
     } catch (err) {
       if (err.code === "23505") {
@@ -91,52 +84,32 @@ export default function createUsuariosService(db) {
   }
 
   async function removerUsuario(id) {
-    const { rowCount } = await db.query(
-      `SELECT 1 FROM usuarios WHERE id = $1`,
-      [id],
-    );
-
+    const { rowCount } = await db.query(`SELECT 1 FROM usuarios WHERE id = $1`, [id]);
     if (rowCount === 0) {
       throw NotFoundError("Usuário não encontrado", "USER_NOT_FOUND");
     }
 
-    // Verificar empréstimos ativos (chamada HTTP para serviço de empréstimos)
+    // Verificar empréstimos ativos via HTTP
     try {
-      const response = await fetch(`http://servico-emprestimos:3003/emprestimos?usuarioId=${id}&status=ativo`);
-      const emprestimos = await response.json();
+      const emprestimosServiceUrl = process.env.EMPRESTIMOS_SERVICE_URL || 'http://servico-emprestimos:3003';
+      const response = await fetch(`${emprestimosServiceUrl}/emprestimos?usuarioId=${id}&status=ativo`);
       
-      if (emprestimos.length > 0) {
-        throw ConflictError(
-          "Usuário possui empréstimos ativos",
-          "USER_HAS_ACTIVE_LOANS",
-        );
+      if (response.ok) {
+        const emprestimos = await response.json();
+        if (emprestimos.length > 0) {
+          throw ConflictError("Usuário possui empréstimos ativos", "USER_HAS_ACTIVE_LOANS");
+        }
       }
     } catch (error) {
-      console.error("Erro ao verificar empréstimos:", error);
-      // Se o serviço de empréstimos estiver indisponível, não permitir exclusão
-      throw new Error("Não foi possível verificar empréstimos do usuário");
+      if (error.statusCode) throw error;
+      console.error("Erro ao verificar empréstimos:", error.message);
+      // Não bloquear exclusão se serviço estiver indisponível
     }
 
-    const { rowCount: cadastroAtivo } = await db.query(
-      `
-      SELECT 1
-      FROM livros
-      WHERE criado_por = $1
-      `,
-      [id],
-    );
-
-    if (cadastroAtivo > 0) {
-      throw ConflictError("Bibliotecário cadastrou livro(s)", "USER_HAS_ACTIVE_REGISTER")
-    } 
-
     const { rows } = await db.query(
-      `DELETE FROM usuarios
-       WHERE id = $1
-       RETURNING id, nome, email, cargo, created_at`,
+      `DELETE FROM usuarios WHERE id = $1 RETURNING id, nome, email, cargo, created_at`,
       [id],
     );
-
     return rows[0];
   }
 
