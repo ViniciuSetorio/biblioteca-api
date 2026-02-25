@@ -2,7 +2,7 @@ services:
   # API Gateway
   - type: web
     name: biblioteca-gateway
-    runtime: image
+    runtime: docker
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./api-gateway/Dockerfile
@@ -22,7 +22,7 @@ services:
   # Serviço de Usuários
   - type: web
     name: biblioteca-usuarios
-    runtime: image
+    runtime: docker 
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-usuarios/Dockerfile
@@ -40,7 +40,7 @@ services:
   # Serviço de Livros
   - type: web
     name: biblioteca-livros
-    runtime: image
+    runtime: docker 
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-livros/Dockerfile
@@ -60,7 +60,7 @@ services:
   # Serviço de Empréstimos
   - type: web
     name: biblioteca-emprestimos
-    runtime: image
+    runtime: docker 
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-emprestimos/Dockerfile
@@ -84,7 +84,7 @@ services:
   # Serviço de Multas
   - type: web
     name: biblioteca-multas
-    runtime: image
+    runtime: docker 
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-multas/Dockerfile
@@ -102,7 +102,7 @@ services:
   # Serviço de Notificações
   - type: web
     name: biblioteca-notificacoes
-    runtime: image
+    runtime: docker 
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-notificacoes/Dockerfile
@@ -120,20 +120,16 @@ services:
 databases:
   - name: usuarios-db
     databaseName: usuarios_db
-    user: postgres
-    plan: free
+    plan: free 
 
   - name: livros-db
     databaseName: livros_db
-    user: postgres
-    plan: free
+    plan: free 
 
   - name: emprestimos-db
     databaseName: emprestimos_db
-    user: postgres
-    plan: free
+    plan: free 
 
   - name: multas-db
     databaseName: multas_db
-    user: postgres
-    plan: free
+    plan: free 
