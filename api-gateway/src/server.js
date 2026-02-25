@@ -1,12 +1,14 @@
-import express from "express";
-import cors from "cors";
-import proxy from "express-http-proxy";
+import express from 'express';
+import cors from 'cors';
+import proxy from 'express-http-proxy';
 
 const app = express();
 
+// CORS mais permissivo para produção
 app.use(cors({
-  origin: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  origin: process.env.FRONTEND_URL || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // URLs dos serviços (podem vir de variáveis de ambiente)

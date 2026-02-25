@@ -1,0 +1,139 @@
+services:
+  # API Gateway
+  - type: web
+    name: biblioteca-gateway
+    runtime: image
+    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    branch: main
+    dockerfilePath: ./api-gateway/Dockerfile
+    dockerContext: ./api-gateway
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: USUARIOS_URL
+        value: https://biblioteca-usuarios.onrender.com
+      - key: LIVROS_URL
+        value: https://biblioteca-livros.onrender.com
+      - key: EMPRESTIMOS_URL
+        value: https://biblioteca-emprestimos.onrender.com
+      - key: MULTAS_URL
+        value: https://biblioteca-multas.onrender.com
+
+  # Serviço de Usuários
+  - type: web
+    name: biblioteca-usuarios
+    runtime: image
+    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    branch: main
+    dockerfilePath: ./servico-usuarios/Dockerfile
+    dockerContext: ./servico-usuarios
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: biblioteca-usuarios-db
+          property: connectionString
+      - key: EMPRESTIMOS_SERVICE_URL
+        value: https://biblioteca-emprestimos.onrender.com
+
+  # Serviço de Livros
+  - type: web
+    name: biblioteca-livros
+    runtime: image
+    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    branch: main
+    dockerfilePath: ./servico-livros/Dockerfile
+    dockerContext: ./servico-livros
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: biblioteca-livros-db
+          property: connectionString
+      - key: USUARIOS_SERVICE_URL
+        value: https://biblioteca-usuarios.onrender.com
+      - key: EMPRESTIMOS_SERVICE_URL
+        value: https://biblioteca-emprestimos.onrender.com
+
+  # Serviço de Empréstimos
+  - type: web
+    name: biblioteca-emprestimos
+    runtime: image
+    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    branch: main
+    dockerfilePath: ./servico-emprestimos/Dockerfile
+    dockerContext: ./servico-emprestimos
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: biblioteca-emprestimos-db
+          property: connectionString
+      - key: USUARIOS_SERVICE_URL
+        value: https://biblioteca-usuarios.onrender.com
+      - key: LIVROS_SERVICE_URL
+        value: https://biblioteca-livros.onrender.com
+      - key: MULTAS_SERVICE_URL
+        value: https://biblioteca-multas.onrender.com
+      - key: NOTIFICACOES_SERVICE_URL
+        value: https://biblioteca-notificacoes.onrender.com
+
+  # Serviço de Multas
+  - type: web
+    name: biblioteca-multas
+    runtime: image
+    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    branch: main
+    dockerfilePath: ./servico-multas/Dockerfile
+    dockerContext: ./servico-multas
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: biblioteca-multas-db
+          property: connectionString
+      - key: EMPRESTIMOS_SERVICE_URL
+        value: https://biblioteca-emprestimos.onrender.com
+
+  # Serviço de Notificações
+  - type: web
+    name: biblioteca-notificacoes
+    runtime: image
+    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    branch: main
+    dockerfilePath: ./servico-notificacoes/Dockerfile
+    dockerContext: ./servico-notificacoes
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: USUARIOS_SERVICE_URL
+        value: https://biblioteca-usuarios.onrender.com
+      - key: EMPRESTIMOS_SERVICE_URL
+        value: https://biblioteca-emprestimos.onrender.com
+      - key: LIVROS_SERVICE_URL
+        value: https://biblioteca-livros.onrender.com
+
+databases:
+  - name: biblioteca-usuarios-db
+    databaseName: usuarios_db
+    user: postgres
+    plan: free
+
+  - name: biblioteca-livros-db
+    databaseName: livros_db
+    user: postgres
+    plan: free
+
+  - name: biblioteca-emprestimos-db
+    databaseName: emprestimos_db
+    user: postgres
+    plan: free
+
+  - name: biblioteca-multas-db
+    databaseName: multas_db
+    user: postgres
+    plan: free
