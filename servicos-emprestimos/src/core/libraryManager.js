@@ -48,8 +48,8 @@ export function createLibraryManager() {
         dataPrevistaDevolucao.setDate(dataPrevistaDevolucao.getDate() + 7);
 
         const { rows } = await client.query(
-          `INSERT INTO emprestimos (usuario_id, livro_id, data_emprestimo, data_prevista_devolucao)
-           VALUES ($1, $2, NOW(), $3) RETURNING *`,
+          `INSERT INTO emprestimos (usuario_id, livro_id, data_emprestimo, data_prevista_devolucao, status)
+           VALUES ($1, $2, NOW(), $3, 'ativo') RETURNING *`,
           [usuarioId, livroId, dataPrevistaDevolucao],
         );
 
