@@ -3,7 +3,7 @@ services:
   - type: web
     name: biblioteca-gateway
     runtime: image
-    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./api-gateway/Dockerfile
     dockerContext: ./api-gateway
@@ -23,7 +23,7 @@ services:
   - type: web
     name: biblioteca-usuarios
     runtime: image
-    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-usuarios/Dockerfile
     dockerContext: ./servico-usuarios
@@ -41,7 +41,7 @@ services:
   - type: web
     name: biblioteca-livros
     runtime: image
-    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-livros/Dockerfile
     dockerContext: ./servico-livros
@@ -61,7 +61,7 @@ services:
   - type: web
     name: biblioteca-emprestimos
     runtime: image
-    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-emprestimos/Dockerfile
     dockerContext: ./servico-emprestimos
@@ -85,7 +85,7 @@ services:
   - type: web
     name: biblioteca-multas
     runtime: image
-    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-multas/Dockerfile
     dockerContext: ./servico-multas
@@ -103,7 +103,7 @@ services:
   - type: web
     name: biblioteca-notificacoes
     runtime: image
-    repo: https://github.com/SEU_USUARIO/biblioteca-api
+    repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-notificacoes/Dockerfile
     dockerContext: ./servico-notificacoes
