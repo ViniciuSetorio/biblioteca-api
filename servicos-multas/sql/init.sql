@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS multas (
+  id SERIAL PRIMARY KEY,
+  emprestimos_id INTEGER NOT NULL,
+  valor DECIMAL(10,2) NOT NULL,
+  pago BOOLEAN DEFAULT false,
+  data_pagamento TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

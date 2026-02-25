@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - servico-usuarios
+      - servico-livros
+      - servico-emprestimos
+      - servico-multas
+      - servico-notificacoes
+
+  servico-usuarios:
+    build: ./servico-usuarios
+    ports:
+      - "3001:3001"
+    environment:
+      - PGUSER=postgres
+      - PGHOST=postgres_usuarios
+      - PGDATABASE=usuarios_db
+      - PGPASSWORD=secret
+      - PGPORT=5432
+    depends_on:
+      - postgres_usuarios
+
+  servico-livros:
+    build: ./servico-livros
+    ports:
+      - "3002:3002"
+    environment:
+      - PGUSER=postgres
+      - PGHOST=postgres_livros
+      - PGDATABASE=livros_db
+      - PGPASSWORD=secret
+      - PGPORT=5432
+    depends_on:
+      - postgres_livros
+      - servico-usuarios
+
+  servico-emprestimos:
+    build: ./servico-emprestimos
+    ports:
+      - "3003:3003"
+    environment:
+      - PGUSER=postgres
+      - PGHOST=postgres_emprestimos
+      - PGDATABASE=emprestimos_db
+      - PGPASSWORD=secret
+      - PGPORT=5432
+    depends_on:
+      - postgres_emprestimos
+      - servico-usuarios
+      - servico-livros
+      - servico-multas
+      - servico-notificacoes
+
+  servico-multas:
+    build: ./servico-multas
+    ports:
+      - "3004:3004"
+    environment:
+      - PGUSER=postgres
+      - PGHOST=postgres_multas
+      - PGDATABASE=multas_db
+      - PGPASSWORD=secret
+      - PGPORT=5432
+    depends_on:
+      - postgres_multas
+      - servico-emprestimos
+
+  servico-notificacoes:
+    build: ./servico-notificacoes
+    ports:
+      - "3005:3005"
+
+  # Bancos de dados
+  postgres_usuarios:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: usuarios_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - usuarios_data:/var/lib/postgresql/data
+      - ./servico-usuarios/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  postgres_livros:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: livros_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - livros_data:/var/lib/postgresql/data
+      - ./servico-livros/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  postgres_emprestimos:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: emprestimos_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - emprestimos_data:/var/lib/postgresql/data
+      - ./servico-emprestimos/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  postgres_multas:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: multas_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - multas_data:/var/lib/postgresql/data
+      - ./servico-multas/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  usuarios_data:
+  livros_data:
+  emprestimos_data:
+  multas_data:
