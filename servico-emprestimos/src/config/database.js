@@ -14,8 +14,8 @@ function createPool() {
 
   return new Pool({
     user: process.env.PGUSER || "postgres",
-    host: process.env.PGHOST || "postgres_usuarios",
-    database: process.env.PGDATABASE || "usuarios_db",
+    host: process.env.PGHOST || "postgres_emprestimos",
+    database: process.env.PGDATABASE || "emprestimos_db",
     password: process.env.PGPASSWORD || "postgres",
     port: process.env.PGPORT || 5432,
   });

@@ -26,10 +26,10 @@ app.get("/health", (req, res) => {
         timestamp: new Date().toISOString(),
       }),
     )
-    .catch((err) =>
+    .catch(() =>
       res.status(500).json({
         status: "unhealthy",
-        error: err.message,
+        error: "databse connection failed",
       }),
     );
 });
