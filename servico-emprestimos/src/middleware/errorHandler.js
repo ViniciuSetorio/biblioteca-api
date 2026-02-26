@@ -1,4 +1,4 @@
-import { AppError } from "../../../utils/httpError.js";
+import { AppError } from "../utils/httpError.js";
 
 export function errorHandler(err, req, res, next) {
   if (err instanceof AppError) {
