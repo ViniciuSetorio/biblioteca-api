@@ -27,13 +27,13 @@ services:
     branch: main
     dockerfilePath: ./servico-usuarios/Dockerfile
     dockerContext: ./servico-usuarios
+    envVarGroups:
+      - name: biblioteca-secrets
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: usuarios-db
-          property: connectionString
+        value: ${NEON_DB_URL_BASE}/usuarios_db?sslmode=require&channel_binding=require
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
@@ -45,13 +45,13 @@ services:
     branch: main
     dockerfilePath: ./servico-livros/Dockerfile
     dockerContext: ./servico-livros
+    envVarGroups:
+      - name: biblioteca-secrets
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: livros-db
-          property: connectionString
+        value: ${NEON_DB_URL_BASE}/livros_db?sslmode=require&channel_binding=require
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: EMPRESTIMOS_SERVICE_URL
@@ -65,13 +65,13 @@ services:
     branch: main
     dockerfilePath: ./servico-emprestimos/Dockerfile
     dockerContext: ./servico-emprestimos
+    envVarGroups:
+      - name: biblioteca-secrets
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: emprestimos-db
-          property: connectionString
+        value: ${NEON_DB_URL_BASE}/emprestimos_db?sslmode=require&channel_binding=require
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: LIVROS_SERVICE_URL
@@ -89,13 +89,13 @@ services:
     branch: main
     dockerfilePath: ./servico-multas/Dockerfile
     dockerContext: ./servico-multas
+    envVarGroups:
+      - name: biblioteca-secrets
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: multas-db
-          property: connectionString
+        value: ${NEON_DB_URL_BASE}/multas_db?sslmode=require&channel_binding=require
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
@@ -116,20 +116,3 @@ services:
         value: https://biblioteca-emprestimos.onrender.com
       - key: LIVROS_SERVICE_URL
         value: https://biblioteca-livros.onrender.com
-
-databases:
-  - name: usuarios-db
-    databaseName: usuarios_db
-    plan: free 
-
-  - name: livros-db
-    databaseName: livros_db
-    plan: free 
-
-  - name: emprestimos-db
-    databaseName: emprestimos_db
-    plan: free 
-
-  - name: multas-db
-    databaseName: multas_db
-    plan: free 
