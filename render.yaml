@@ -27,13 +27,12 @@ services:
     branch: main
     dockerfilePath: ./servico-usuarios/Dockerfile
     dockerContext: ./servico-usuarios
-    envVarGroups:
-      - name: biblioteca-secrets
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
         value: ${NEON_DB_URL_BASE}/usuarios_db?sslmode=require&channel_binding=require
+      - fromGroup: biblioteca-secrets
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
@@ -45,13 +44,12 @@ services:
     branch: main
     dockerfilePath: ./servico-livros/Dockerfile
     dockerContext: ./servico-livros
-    envVarGroups:
-      - name: biblioteca-secrets
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
         value: ${NEON_DB_URL_BASE}/livros_db?sslmode=require&channel_binding=require
+      - fromGroup: biblioteca-secrets 
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: EMPRESTIMOS_SERVICE_URL
@@ -65,13 +63,12 @@ services:
     branch: main
     dockerfilePath: ./servico-emprestimos/Dockerfile
     dockerContext: ./servico-emprestimos
-    envVarGroups:
-      - name: biblioteca-secrets
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
         value: ${NEON_DB_URL_BASE}/emprestimos_db?sslmode=require&channel_binding=require
+      - fromGroup: biblioteca-secrets
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: LIVROS_SERVICE_URL
@@ -89,13 +86,12 @@ services:
     branch: main
     dockerfilePath: ./servico-multas/Dockerfile
     dockerContext: ./servico-multas
-    envVarGroups:
-      - name: biblioteca-secrets
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
         value: ${NEON_DB_URL_BASE}/multas_db?sslmode=require&channel_binding=require
+      - fromGroup: biblioteca-secrets
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
