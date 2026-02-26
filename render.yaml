@@ -33,8 +33,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: ${NEON_DB_URL_BASE}/usuarios_db?sslmode=require&channel_binding=require
       - fromGroup: biblioteca-secrets
+        value: USUARIOS_DB_URL
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
@@ -51,8 +51,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: ${NEON_DB_URL_BASE}/livros_db?sslmode=require&channel_binding=require
       - fromGroup: biblioteca-secrets 
+        value: LIVROS_DB_URL
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: EMPRESTIMOS_SERVICE_URL
@@ -71,8 +71,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: ${NEON_DB_URL_BASE}/emprestimos_db?sslmode=require&channel_binding=require
       - fromGroup: biblioteca-secrets
+        value: EMPRESTIMOS_DB_URL
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: LIVROS_SERVICE_URL
@@ -95,8 +95,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: ${NEON_DB_URL_BASE}/multas_db?sslmode=require&channel_binding=require
       - fromGroup: biblioteca-secrets
+        value: MULTAS_DB_URL
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
