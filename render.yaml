@@ -3,6 +3,7 @@ services:
   - type: web
     name: biblioteca-gateway
     runtime: docker
+    plan: free
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./api-gateway/Dockerfile
@@ -23,6 +24,7 @@ services:
   - type: web
     name: biblioteca-usuarios
     runtime: docker 
+    plan: free
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-usuarios/Dockerfile
@@ -40,6 +42,7 @@ services:
   - type: web
     name: biblioteca-livros
     runtime: docker 
+    plan: free
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-livros/Dockerfile
@@ -59,6 +62,7 @@ services:
   - type: web
     name: biblioteca-emprestimos
     runtime: docker 
+    plan: free
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-emprestimos/Dockerfile
@@ -82,6 +86,7 @@ services:
   - type: web
     name: biblioteca-multas
     runtime: docker 
+    plan: free
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-multas/Dockerfile
@@ -99,6 +104,7 @@ services:
   - type: web
     name: biblioteca-notificacoes
     runtime: docker 
+    plan: free
     repo: https://github.com/ViniciuSetorio/biblioteca-api
     branch: main
     dockerfilePath: ./servico-notificacoes/Dockerfile
