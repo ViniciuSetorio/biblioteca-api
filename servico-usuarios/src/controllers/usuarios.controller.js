@@ -1,6 +1,6 @@
 import createUsuariosService from "../services/usuarios.service.js";
 import getDatabase from "../config/database.js";
-import { InternalServerError, NotFoundError } from "../../../utils/httpError.js";
+import { InternalServerError, NotFoundError } from "../utils/httpError.js";
 
 const db = getDatabase();
 const usuariosService = createUsuariosService(db);

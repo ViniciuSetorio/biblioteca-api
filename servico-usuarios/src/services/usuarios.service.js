@@ -2,7 +2,7 @@ import {
   ConflictError,
   NotFoundError,
   UnprocessableEntityError,
-} from "../../../utils/httpError.js";
+} from "../utils/httpError.js";
 
 export default function createUsuariosService(db) {
   async function buscarUsuarios() {
