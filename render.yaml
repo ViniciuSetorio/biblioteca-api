@@ -9,6 +9,7 @@ services:
     dockerfilePath: ./api-gateway/Dockerfile
     dockerContext: ./api-gateway
     envVars:
+      - fromGroup: biblioteca-secrets
       - key: NODE_ENV
         value: production
       - key: USUARIOS_URL
@@ -30,11 +31,11 @@ services:
     dockerfilePath: ./servico-usuarios/Dockerfile
     dockerContext: ./servico-usuarios
     envVars:
+      - fromGroup: biblioteca-secrets
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromGroup: biblioteca-secrets
-        envVarKey: USUARIOS_DB_URL
+        value: ${USUARIOS_DB_URL}
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
@@ -48,11 +49,11 @@ services:
     dockerfilePath: ./servico-livros/Dockerfile
     dockerContext: ./servico-livros
     envVars:
+      - fromGroup: biblioteca-secrets
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromGroup: biblioteca-secrets 
-        envVarKey: LIVROS_DB_URL
+        value: ${LIVROS_DB_URL}
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: EMPRESTIMOS_SERVICE_URL
@@ -68,11 +69,11 @@ services:
     dockerfilePath: ./servico-emprestimos/Dockerfile
     dockerContext: ./servico-emprestimos
     envVars:
+      - fromGroup: biblioteca-secrets
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromGroup: biblioteca-secrets
-        envVarKey: EMPRESTIMOS_DB_URL
+        value: ${EMPRESTIMOS_DB_URL}
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: LIVROS_SERVICE_URL
@@ -92,11 +93,11 @@ services:
     dockerfilePath: ./servico-multas/Dockerfile
     dockerContext: ./servico-multas
     envVars:
+      - fromGroup: biblioteca-secrets
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromGroup: biblioteca-secrets
-        envVarKey: MULTAS_DB_URL
+        value: ${MULTAS_DB_URL}
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
@@ -110,6 +111,7 @@ services:
     dockerfilePath: ./servico-notificacoes/Dockerfile
     dockerContext: ./servico-notificacoes
     envVars:
+      - fromGroup: biblioteca-secrets
       - key: NODE_ENV
         value: production
       - key: USUARIOS_SERVICE_URL
