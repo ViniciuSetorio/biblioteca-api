@@ -33,8 +33,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-      - fromGroup: biblioteca-secrets
-        key: USUARIOS_DB_URL
+        fromGroup: biblioteca-secrets
+        envVarKey: USUARIOS_DB_URL
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
@@ -51,8 +51,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-      - fromGroup: biblioteca-secrets 
-        key: LIVROS_DB_URL
+        fromGroup: biblioteca-secrets 
+        envVarKey: LIVROS_DB_URL
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: EMPRESTIMOS_SERVICE_URL
@@ -71,8 +71,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-      - fromGroup: biblioteca-secrets
-        key: EMPRESTIMOS_DB_URL
+        fromGroup: biblioteca-secrets
+        envVarKey: EMPRESTIMOS_DB_URL
       - key: USUARIOS_SERVICE_URL
         value: https://biblioteca-usuarios.onrender.com
       - key: LIVROS_SERVICE_URL
@@ -95,8 +95,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-      - fromGroup: biblioteca-secrets
-        key: MULTAS_DB_URL
+        fromGroup: biblioteca-secrets
+        envVarKey: MULTAS_DB_URL
       - key: EMPRESTIMOS_SERVICE_URL
         value: https://biblioteca-emprestimos.onrender.com
 
