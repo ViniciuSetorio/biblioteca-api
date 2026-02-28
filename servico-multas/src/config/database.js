@@ -6,6 +6,14 @@ function createPool() {
   // Configuração para produção (Neon/Render)
   if (process.env.DATABASE_URL) {
     console.log("Configurando pool com DATABASE_URL");
+
+    // ATENÇÃO: Se DATABASE_URL existir, ignoramos COMPLETAMENTE as variáveis PG... do Render
+    delete process.env.PGHOST;
+    delete process.env.PGUSER;
+    delete process.env.PGDATABASE;
+    delete process.env.PGPASSWORD;
+    delete process.env.PGPORT;
+
     return new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: {
