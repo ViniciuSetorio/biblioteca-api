@@ -3,30 +3,30 @@ import { Pool } from "pg";
 let poolInstance;
 
 function createPool() {
-  // Configuração para produção (Neon/Render)
-  if (process.env.DATABASE_URL) {
-    const maskedUrl = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ":****@");
-    console.log(`Configurando pool com DATABASE_URL: ${maskedUrl}`);
-
-    // Verificar se o hostname é o literal "base" (causa comum de ENOTFOUND base)
-    if (
-      process.env.DATABASE_URL.includes("@base:") ||
-      process.env.DATABASE_URL.includes("@base/")
-    ) {
+  // Configuração para produção (Neon/Render/Railway)
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.DATABASE_URL ||
+    process.env.USUARIOS_DB_URL
+  ) {
+    const dbUrl = process.env.DATABASE_URL || process.env.USUARIOS_DB_URL;
+    if (!dbUrl) {
       console.warn(
-        "⚠️ ALERTA: DATABASE_URL parece conter o hostname 'base'. Verifique as variáveis de ambiente no Render!",
+        "⚠️ DATABASE_URL ou USUARIOS_DB_URL não encontrados em ambiente de produção!",
       );
+    } else {
+      const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ":****@");
+      console.log(`Configurando pool com URL: ${maskedUrl}`);
     }
 
-    // ATENÇÃO: Se DATABASE_URL existir, ignoramos COMPLETAMENTE as variáveis PG... do Render
-    // Isso evita conflitos se o Render injetar variáveis padrão
+    // ATENÇÃO: Se a URL existir, ignoramos COMPLETAMENTE as variáveis PG... do Render
     const pgVars = ["PGHOST", "PGUSER", "PGDATABASE", "PGPASSWORD", "PGPORT"];
     pgVars.forEach((v) => delete process.env[v]);
 
     return new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: dbUrl,
       ssl: {
-        rejectUnauthorized: false, // OBRIGATÓRIO para Neon/Render
+        rejectUnauthorized: false,
       },
       // Timeouts para evitar conexões pendentes
       connectionTimeoutMillis: 10000,
