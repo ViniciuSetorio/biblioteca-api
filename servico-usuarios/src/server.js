@@ -19,7 +19,7 @@ app.get("/health", (req, res) => {
     .then(() =>
       res.json({
         status: "healthy",
-        service: process.env.RENDER_SERVICE_NAME || "unknown",
+        service: process.env.RENDER_SERVICE_NAME || "usuarios-service",
         database: "connected",
         timestamp: new Date().toISOString(),
       }),
