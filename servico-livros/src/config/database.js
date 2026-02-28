@@ -20,7 +20,7 @@ function createPool() {
         rejectUnauthorized: false, // OBRIGATÓRIO para Neon/Render
       },
       // Timeouts para evitar conexões pendentes
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 10000,
       idleTimeoutMillis: 30000,
     });
   }
