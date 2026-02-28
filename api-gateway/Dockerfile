@@ -7,11 +7,15 @@ RUN npm install
 
 COPY . .
 
-# Adicione esta linha para garantir que as variáveis de ambiente sejam passadas
-ENV DATABASE_URL=${DATABASE_URL}
-ENV GATEWAY_URL=${GATEWAY_URL}
+# ✅ Variáveis para o GATEWAY (APENAS estas)
+ENV USUARIOS_URL=${USUARIOS_URL}
+ENV LIVROS_URL=${LIVROS_URL}
+ENV EMPRESTIMOS_URL=${EMPRESTIMOS_URL}
+ENV MULTAS_URL=${MULTAS_URL}
+ENV FRONTEND_URL=${FRONTEND_URL}
 ENV NODE_ENV=${NODE_ENV}
+ENV PORT=${PORT}
 
-EXPOSE 3000
+EXPOSE ${PORT:-3000}
 
 CMD ["node", "src/server.js"]
