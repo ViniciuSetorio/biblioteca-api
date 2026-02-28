@@ -5,14 +5,22 @@ let poolInstance;
 function createPool() {
   // Configuração para produção (Neon/Render)
   if (process.env.DATABASE_URL) {
-    console.log("Configurando pool com DATABASE_URL");
+    const maskedUrl = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ":****@");
+    console.log(`Configurando pool com DATABASE_URL: ${maskedUrl}`);
+
+    // Verificar se o hostname é o literal "base" (causa comum de ENOTFOUND base)
+    if (
+      process.env.DATABASE_URL.includes("@base:") ||
+      process.env.DATABASE_URL.includes("@base/")
+    ) {
+      console.warn(
+        "⚠️ ALERTA: DATABASE_URL parece conter o hostname 'base'. Verifique as variáveis de ambiente no Render!",
+      );
+    }
 
     // ATENÇÃO: Se DATABASE_URL existir, ignoramos COMPLETAMENTE as variáveis PG... do Render
-    delete process.env.PGHOST;
-    delete process.env.PGUSER;
-    delete process.env.PGDATABASE;
-    delete process.env.PGPASSWORD;
-    delete process.env.PGPORT;
+    const pgVars = ["PGHOST", "PGUSER", "PGDATABASE", "PGPASSWORD", "PGPORT"];
+    pgVars.forEach((v) => delete process.env[v]);
 
     return new Pool({
       connectionString: process.env.DATABASE_URL,
@@ -26,10 +34,11 @@ function createPool() {
   }
 
   // Configuração para desenvolvimento local (Docker/compose)
-  console.log("Configurando pool para desenvolvimento local");
+  const host = process.env.PGHOST || "postgres_livros";
+  console.log(`Configurando pool para desenvolvimento local (Host: ${host})`);
   return new Pool({
     user: process.env.PGUSER || "postgres",
-    host: process.env.PGHOST || "postgres_livros",
+    host: host,
     database: process.env.PGDATABASE || "livros_db",
     password: process.env.PGPASSWORD || "postgres",
     port: process.env.PGPORT || 5432,
