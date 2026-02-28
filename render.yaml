@@ -20,6 +20,9 @@ services:
         value: https://biblioteca-emprestimos.onrender.com
       - key: MULTAS_URL
         value: https://biblioteca-multas.onrender.com
+      - key: FRONTEND_URL
+        value: https://bibton.vercel.app/
+
 
   # Serviço de Usuários
   - type: web
@@ -120,3 +123,13 @@ services:
         value: https://biblioteca-emprestimos.onrender.com
       - key: LIVROS_SERVICE_URL
         value: https://biblioteca-livros.onrender.com
+      - key: SMTP_HOST
+        value: ${SMTP_HOST}
+      - key: SMTP_PORT
+        value: ${SMTP_PORT}
+      - key: SMTP_USER
+        value: ${SMTP_USER}
+      - key: SMTP_PASS
+        value: ${SMTP_PASS}
+      - key: EMAIL_FROM
+        value: ${EMAIL_FROM}
