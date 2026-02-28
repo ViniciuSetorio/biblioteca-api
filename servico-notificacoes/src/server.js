@@ -10,22 +10,11 @@ app.use(cors());
 app.use("/notificacoes", notificacoesRoutes);
 
 app.get("/health", (req, res) => {
-  const db = getDatabase();
-  db.query("SELECT 1")
-    .then(() =>
-      res.json({
-        status: "healthy",
-        service: process.env.RENDER_SERVICE_NAME || "unknown",
-        database: "connected",
-        timestamp: new Date().toISOString(),
-      }),
-    )
-    .catch(() =>
-      res.status(500).json({
-        status: "unhealthy",
-        error: "Database connection failed",
-      }),
-    );
+  res.json({
+    status: "healthy",
+    service: process.env.RENDER_SERVICE_NAME || "notificacoes-service",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 const PORT = process.env.PORT || 3005;
