@@ -11,11 +11,20 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Helper para filtrar placeholders literais como ${VAR} que o Render às vezes injeta
+const getEnvVar = (v, fallback) => {
+  const val = process.env[v];
+  return (val && !val.includes("${")) ? val : fallback;
+};
+
 // URLs dos serviços (podem vir de variáveis de ambiente)
-const USUARIOS_URL = process.env.USUARIOS_URL || 'http://servico-usuarios:3001';
-const LIVROS_URL = process.env.LIVROS_URL || 'http://servico-livros:3002';
-const EMPRESTIMOS_URL = process.env.EMPRESTIMOS_URL || 'http://servico-emprestimos:3003';
-const MULTAS_URL = process.env.MULTAS_URL || 'http://servico-multas:3004';
+const USUARIOS_URL = getEnvVar("USUARIOS_URL", "http://servico-usuarios:3001");
+const LIVROS_URL = getEnvVar("LIVROS_URL", "http://servico-livros:3002");
+const EMPRESTIMOS_URL = getEnvVar(
+  "EMPRESTIMOS_URL",
+  "http://servico-emprestimos:3003",
+);
+const MULTAS_URL = getEnvVar("MULTAS_URL", "http://servico-multas:3004");
 
 // Rotas para cada microsserviço
 app.use("/usuarios", proxy(USUARIOS_URL));

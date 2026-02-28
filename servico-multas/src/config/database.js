@@ -3,13 +3,15 @@ import { Pool } from "pg";
 let poolInstance;
 
 function createPool() {
+  const getEnvVar = (v) => {
+    const val = process.env[v];
+    return val && !val.includes("${") ? val : null;
+  };
+
+  const dbUrl = getEnvVar("DATABASE_URL") || getEnvVar("MULTAS_DB_URL");
+
   // Configuração para produção (Neon/Render/Railway)
-  if (
-    process.env.NODE_ENV === "production" ||
-    process.env.DATABASE_URL ||
-    process.env.MULTAS_DB_URL
-  ) {
-    const dbUrl = process.env.DATABASE_URL || process.env.MULTAS_DB_URL;
+  if (process.env.NODE_ENV === "production" || dbUrl) {
     if (!dbUrl) {
       console.warn(
         "⚠️ DATABASE_URL ou MULTAS_DB_URL não encontrados em ambiente de produção!",
