@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagrama de Arquitetura — Biblioteca API</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161d;
+      --surface2: #1a1e28;
+      --border: #252a38;
+      --border2: #2e3447;
+      --accent: #4f8ef7;
+      --accent2: #7c5af5;
+      --green: #3dd68c;
+      --orange: #f5a623;
+      --red: #f56342;
+      --yellow: #f5d642;
+      --cyan: #42d4f5;
+      --text: #e8ecf4;
+      --text2: #8b92a8;
+      --text3: #5a6178;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Syne', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 48px 32px;
+    }
+
+    .page-title {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .page-title h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #4f8ef7, #7c5af5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-title p {
+      color: var(--text2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      margin-top: 8px;
+      letter-spacing: 1px;
+    }
+
+    /*  SECTION HEADERS  */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .section-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+
+    .n1 {
+      background: rgba(245, 166, 35, 0.15);
+      color: var(--orange);
+      border: 1px solid rgba(245, 166, 35, 0.3);
+    }
+
+    .n2 {
+      background: rgba(79, 142, 247, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(79, 142, 247, 0.3);
+    }
+
+    .section-header h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .section-header span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text3);
+      margin-top: 2px;
+      display: block;
+    }
+
+    /*  DIAGRAMS CONTAINER  */
+    .diagrams-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0;
+      align-items: start;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /*  ARROW  */
+    .arrow-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 180px;
+      gap: 8px;
+      width: 80px;
+    }
+
+    .arrow-line {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .arrow-dashes {
+      width: 36px;
+      height: 2px;
+      background: repeating-linear-gradient(90deg, var(--accent) 0, var(--accent) 6px, transparent 6px, transparent 12px);
+    }
+
+    .arrow-head {
+      width: 0;
+      height: 0;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      border-left: 12px solid var(--accent);
+    }
+
+    .arrow-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /*  MONOLITH  */
+    .monolith-box {
+      background: var(--surface);
+      border: 1.5px solid var(--border2);
+      border-radius: 20px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .monolith-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(245, 166, 35, 0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .monolith-outer {
+      border: 2px dashed rgba(245, 166, 35, 0.4);
+      border-radius: 14px;
+      padding: 20px;
+      background: rgba(245, 166, 35, 0.03);
+      position: relative;
+    }
+
+    .monolith-label-top {
+      position: absolute;
+      top: -11px;
+      left: 16px;
+      background: var(--surface);
+      padding: 0 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--orange);
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .mono-db-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--text3);
+      text-align: center;
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+
+    .module-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .module-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .module-block:hover {
+      border-color: var(--border);
+    }
+
+    .module-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .module-info {
+      flex: 1;
+    }
+
+    .module-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .module-desc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .coupled-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      color: var(--red);
+      background: rgba(245, 99, 66, 0.1);
+      border: 1px solid rgba(245, 99, 66, 0.2);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    /* Shared DB */
+    .shared-db {
+      margin-top: 16px;
+      background: rgba(245, 166, 35, 0.06);
+      border: 1.5px solid rgba(245, 166, 35, 0.25);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .db-icon {
+      font-size: 1.2rem;
+    }
+
+    .db-info .db-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--orange);
+    }
+
+    .db-info .db-desc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--text3);
+      margin-top: 1px;
+    }
+
+    /* connector lines inside monolith */
+    .mono-connectors {
+      margin: 6px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .mono-connector-dot {
+      width: 2px;
+      height: 8px;
+      background: var(--border2);
+    }
+
+    /*  MICROSERVICES  */
+    .micro-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .micro-gateway {
+      background: var(--surface);
+      border: 1.5px solid rgba(79, 142, 247, 0.4);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .micro-gateway::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(79, 142, 247, 0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .gateway-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      color: var(--accent);
+      background: rgba(79, 142, 247, 0.12);
+      border: 1px solid rgba(79, 142, 247, 0.25);
+      border-radius: 4px;
+      padding: 2px 6px;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    .gateway-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(79, 142, 247, 0.12);
+      border: 1px solid rgba(79, 142, 247, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .gateway-info .gateway-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .gateway-info .gateway-desc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    /* services grid */
+    .services-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .service-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border2);
+      border-radius: 14px;
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .service-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: 14px 14px 0 0;
+    }
+
+    .card-usuarios::before {
+      background: linear-gradient(90deg, var(--green), transparent);
+    }
+
+    .card-livros::before {
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+
+    .card-emprestimos::before {
+      background: linear-gradient(90deg, var(--accent2), transparent);
+    }
+
+    .card-multas::before {
+      background: linear-gradient(90deg, var(--red), transparent);
+    }
+
+    .card-notificacoes::before {
+      background: linear-gradient(90deg, var(--cyan), transparent);
+    }
+
+    .card-usuarios {
+      border-color: rgba(61, 214, 140, 0.2);
+    }
+
+    .card-livros {
+      border-color: rgba(79, 142, 247, 0.2);
+    }
+
+    .card-emprestimos {
+      border-color: rgba(124, 90, 245, 0.2);
+    }
+
+    .card-multas {
+      border-color: rgba(245, 99, 66, 0.2);
+    }
+
+    .card-notificacoes {
+      border-color: rgba(66, 212, 245, 0.2);
+    }
+
+    .service-card:hover.card-usuarios {
+      border-color: rgba(61, 214, 140, 0.5);
+    }
+
+    .service-card:hover.card-livros {
+      border-color: rgba(79, 142, 247, 0.5);
+    }
+
+    .service-card:hover.card-emprestimos {
+      border-color: rgba(124, 90, 245, 0.5);
+    }
+
+    .service-card:hover.card-multas {
+      border-color: rgba(245, 99, 66, 0.5);
+    }
+
+    .service-card:hover.card-notificacoes {
+      border-color: rgba(66, 212, 245, 0.5);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .card-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .icon-usuarios {
+      background: rgba(61, 214, 140, 0.12);
+    }
+
+    .icon-livros {
+      background: rgba(79, 142, 247, 0.12);
+    }
+
+    .icon-emprestimos {
+      background: rgba(124, 90, 245, 0.12);
+    }
+
+    .icon-multas {
+      background: rgba(245, 99, 66, 0.12);
+    }
+
+    .icon-notificacoes {
+      background: rgba(66, 212, 245, 0.12);
+    }
+
+    .card-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .card-port {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      margin-left: auto;
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .port-usuarios {
+      color: var(--green);
+      background: rgba(61, 214, 140, 0.1);
+    }
+
+    .port-livros {
+      color: var(--accent);
+      background: rgba(79, 142, 247, 0.1);
+    }
+
+    .port-emprestimos {
+      color: var(--accent2);
+      background: rgba(124, 90, 245, 0.1);
+    }
+
+    .port-multas {
+      color: var(--red);
+      background: rgba(245, 99, 66, 0.1);
+    }
+
+    .port-notificacoes {
+      color: var(--cyan);
+      background: rgba(66, 212, 245, 0.1);
+    }
+
+    .card-db {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 8px;
+      margin-bottom: 8px;
+    }
+
+    .card-db-icon {
+      font-size: 0.75rem;
+    }
+
+    .card-db-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--text3);
+    }
+
+    .card-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .feature-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      color: var(--text3);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 2px 5px;
+    }
+
+    /* notificacoes spans full width */
+    .card-notificacoes.span-full {
+      grid-column: 1 / -1;
+    }
+
+    /*  LEGEND  */
+    .legend {
+      max-width: 1200px;
+      margin: 48px auto 0;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .legend-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-right: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text2);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /*  CONNECTOR from gateway to services  */
+    .gateway-connector {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 16px;
+      position: relative;
+    }
+
+    .gateway-connector::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background: repeating-linear-gradient(90deg, var(--border2) 0, var(--border2) 4px, transparent 4px, transparent 8px);
+    }
+
+    .gateway-connector-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* HTTP badge on arrow between services */
+    .http-flows {
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .http-flows-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--text3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .http-flow-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--text2);
+    }
+
+    .flow-arrow {
+      color: var(--accent);
+    }
+
+    .http-flow-row:last-child {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 900px) {
+      .diagrams-row {
+        grid-template-columns: 1fr;
+      }
+
+      .arrow-col {
+        padding-top: 0;
+        flex-direction: row;
+        justify-content: center;
+        width: 100%;
+        padding: 16px 0;
+      }
+
+      .arrow-dashes {
+        width: 60px;
+      }
+
+      .services-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card-notificacoes.span-full {
+        grid-column: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page-title">
+    <h1>Arquitetura — Biblioteca API</h1>
+    <p>// Monolito Original → Refatoração para Microserviços</p>
+  </div>
+
+  <div class="diagrams-row">
+
+    <!-- 1. MONOLITH -->
+    <div>
+      <div class="section-header">
+        <div class="section-number n1">01</div>
+        <div>
+          <h2>Arquitetura Monolítica</h2>
+          <span>// aplicação única, banco compartilhado, alto acoplamento</span>
+        </div>
+      </div>
+
+      <div class="monolith-box">
+        <div class="monolith-outer">
+          <div class="monolith-label-top">BIBLIOTECA_API — Node.js / Express</div>
+
+          <!-- Módulo Usuários -->
+          <div class="module-block">
+            <div class="module-icon" style="background:rgba(61,214,140,0.1)">👤</div>
+            <div class="module-info">
+              <div class="module-name">Módulo de Usuários</div>
+              <div class="module-desc">CRUD de usuários · validações</div>
+            </div>
+            <div class="coupled-badge">acoplado</div>
+          </div>
+
+          <div class="mono-connectors">
+            <div class="mono-connector-dot"></div>
+          </div>
+
+          <!-- Módulo Livros -->
+          <div class="module-block">
+            <div class="module-icon" style="background:rgba(79,142,247,0.1)">📚</div>
+            <div class="module-info">
+              <div class="module-name">Módulo de Livros</div>
+              <div class="module-desc">catálogo · cópias · disponibilidade</div>
+            </div>
+            <div class="coupled-badge">acoplado</div>
+          </div>
+
+          <div class="mono-connectors">
+            <div class="mono-connector-dot"></div>
+          </div>
+
+          <!-- Módulo Empréstimos -->
+          <div class="module-block">
+            <div class="module-icon" style="background:rgba(124,90,245,0.1)">🔄</div>
+            <div class="module-info">
+              <div class="module-name">Módulo de Empréstimos</div>
+              <div class="module-desc">emprestar · devolver · reservas</div>
+            </div>
+            <div class="coupled-badge">acoplado</div>
+          </div>
+
+          <div class="mono-connectors">
+            <div class="mono-connector-dot"></div>
+          </div>
+
+          <!-- Módulo Multas -->
+          <div class="module-block">
+            <div class="module-icon" style="background:rgba(245,99,66,0.1)">💸</div>
+            <div class="module-info">
+              <div class="module-name">Módulo de Multas</div>
+              <div class="module-desc">cálculo · R$ 2,00/dia de atraso</div>
+            </div>
+            <div class="coupled-badge">acoplado</div>
+          </div>
+
+          <div class="mono-connectors">
+            <div class="mono-connector-dot"></div>
+          </div>
+
+          <!-- Módulo Notificações -->
+          <div class="module-block">
+            <div class="module-icon" style="background:rgba(66,212,245,0.1)">🔔</div>
+            <div class="module-info">
+              <div class="module-name">Módulo de Notificações</div>
+              <div class="module-desc">e-mail · alertas de devolução</div>
+            </div>
+            <div class="coupled-badge">acoplado</div>
+          </div>
+
+          <!-- Shared DB -->
+          <div class="shared-db">
+            <div class="db-icon">🗄️</div>
+            <div class="db-info">
+              <div class="db-name">PostgreSQL — Banco Único</div>
+              <div class="db-desc">todas as tabelas em um único schema</div>
+            </div>
+          </div>
+
+          <div class="mono-db-label">// emprestimos · reservas · usuarios · livros · multas</div>
+        </div>
+
+        <!-- Problemas -->
+        <div
+          style="margin-top:16px; padding:12px 14px; background:rgba(245,99,66,0.06); border:1px solid rgba(245,99,66,0.15); border-radius:10px;">
+          <div
+            style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--red); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">
+            ⚠ Limitações</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">deploy
+              único</span>
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">falha
+              em cascata</span>
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">escala
+              ineficiente</span>
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">alto
+              acoplamento</span>
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">banco
+              compartilhado</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--  ARROW  -->
+    <div class="arrow-col">
+      <div class="arrow-line">
+        <div class="arrow-dashes"></div>
+        <div class="arrow-head"></div>
+      </div>
+      <div class="arrow-label">migração</div>
+    </div>
+
+    <!--  2. MICROSERVICES  -->
+    <div>
+      <div class="section-header">
+        <div class="section-number n2">02</div>
+        <div>
+          <h2>Arquitetura em Microserviços</h2>
+          <span>// serviços independentes · DBs isolados · REST HTTP</span>
+        </div>
+      </div>
+
+      <div class="micro-col">
+
+        <!-- API Gateway -->
+        <div class="micro-gateway">
+          <div class="gateway-icon">🌐</div>
+          <div class="gateway-info" style="flex:1">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="gateway-name">API Gateway</div>
+              <div class="gateway-badge">:3000</div>
+            </div>
+            <div class="gateway-desc">roteamento · CORS · entrada única do sistema</div>
+          </div>
+        </div>
+
+        <!-- Connector gateway → services -->
+        <div class="gateway-connector">
+          <div class="gateway-connector-dot"></div>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="services-grid">
+
+          <!-- Usuários -->
+          <div class="service-card card-usuarios">
+            <div class="card-header">
+              <div class="card-icon icon-usuarios">👤</div>
+              <div class="card-name">Serviço de<br>Usuários</div>
+              <div class="card-port port-usuarios">:3001</div>
+            </div>
+            <div class="card-db">
+              <span class="card-db-icon">🗄️</span>
+              <span class="card-db-text">usuarios_db · :5432</span>
+            </div>
+            <div class="card-features">
+              <span class="feature-tag">CRUD</span>
+              <span class="feature-tag">validação</span>
+              <span class="feature-tag">perfis</span>
+            </div>
+          </div>
+
+          <!-- Livros -->
+          <div class="service-card card-livros">
+            <div class="card-header">
+              <div class="card-icon icon-livros">📚</div>
+              <div class="card-name">Serviço de<br>Livros</div>
+              <div class="card-port port-livros">:3002</div>
+            </div>
+            <div class="card-db">
+              <span class="card-db-icon">🗄️</span>
+              <span class="card-db-text">livros_db · :5433</span>
+            </div>
+            <div class="card-features">
+              <span class="feature-tag">catálogo</span>
+              <span class="feature-tag">cópias</span>
+              <span class="feature-tag">estoque</span>
+            </div>
+          </div>
+
+          <!-- Empréstimos -->
+          <div class="service-card card-emprestimos">
+            <div class="card-header">
+              <div class="card-icon icon-emprestimos">🔄</div>
+              <div class="card-name">Serviço de<br>Empréstimos</div>
+              <div class="card-port port-emprestimos">:3003</div>
+            </div>
+            <div class="card-db">
+              <span class="card-db-icon">🗄️</span>
+              <span class="card-db-text">emprestimos_db · :5434</span>
+            </div>
+            <div class="card-features">
+              <span class="feature-tag">emprestar</span>
+              <span class="feature-tag">devolver</span>
+              <span class="feature-tag">reservas</span>
+              <span class="feature-tag">singleton</span>
+            </div>
+          </div>
+
+          <!-- Multas -->
+          <div class="service-card card-multas">
+            <div class="card-header">
+              <div class="card-icon icon-multas">💸</div>
+              <div class="card-name">Serviço de<br>Multas</div>
+              <div class="card-port port-multas">:3004</div>
+            </div>
+            <div class="card-db">
+              <span class="card-db-icon">🗄️</span>
+              <span class="card-db-text">multas_db · :5435</span>
+            </div>
+            <div class="card-features">
+              <span class="feature-tag">R$2/dia</span>
+              <span class="feature-tag">atraso</span>
+              <span class="feature-tag">quitação</span>
+            </div>
+          </div>
+
+          <!-- Notificações — span full -->
+          <div class="service-card card-notificacoes span-full">
+            <div class="card-header">
+              <div class="card-icon icon-notificacoes">🔔</div>
+              <div class="card-name">Serviço de Notificações</div>
+              <div class="card-port port-notificacoes">:3005</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <div class="card-db" style="flex:1; min-width:140px; margin-bottom:0">
+                <span class="card-db-icon">📧</span>
+                <span class="card-db-text">SMTP · smtp.gmail.com:587</span>
+              </div>
+              <div class="card-features" style="margin-bottom:0">
+                <span class="feature-tag">e-mail</span>
+                <span class="feature-tag">empréstimo</span>
+                <span class="feature-tag">vencimento</span>
+                <span class="feature-tag">async fire&forget</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- HTTP Flows -->
+        <div class="http-flows">
+          <div class="http-flows-title">// comunicação HTTP REST entre serviços</div>
+          <div class="http-flow-row"><span style="color:var(--accent2)">emprestimos</span> <span
+              class="flow-arrow">→</span> <span style="color:var(--green)">usuarios</span> · verificar existência</div>
+          <div class="http-flow-row"><span style="color:var(--accent2)">emprestimos</span> <span
+              class="flow-arrow">→</span> <span style="color:var(--accent)">livros</span> · checar cópias disponíveis
+          </div>
+          <div class="http-flow-row"><span style="color:var(--accent2)">emprestimos</span> <span
+              class="flow-arrow">→</span> <span style="color:var(--red)">multas</span> · gerar multa por atraso</div>
+          <div class="http-flow-row"><span style="color:var(--accent2)">emprestimos</span> <span
+              class="flow-arrow">→</span> <span style="color:var(--cyan)">notificações</span> · notificar (async)</div>
+        </div>
+
+        <!-- Vantagens -->
+        <div
+          style="padding:12px 14px; background:rgba(61,214,140,0.05); border:1px solid rgba(61,214,140,0.15); border-radius:10px;">
+          <div
+            style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--green); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">
+            ✓ Benefícios</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">deploy
+              independente</span>
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">isolamento
+              de falhas</span>
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">escala
+              por serviço</span>
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">BD
+              isolado por serviço</span>
+            <span
+              style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:3px 7px;">baixo
+              acoplamento</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <span class="legend-title">legenda:</span>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--green)"></div>:3001 usuarios
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--accent)"></div>:3002 livros
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--accent2)"></div>:3003 emprestimos
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--red)"></div>:3004 multas
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--cyan)"></div>:3005 notificacoes
+    </div>
+    <div class="legend-item" style="margin-left:auto">
+      <div class="legend-dot" style="background:var(--accent)"></div>:3000 gateway
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3)">// Engenharia de Software
+      II · Padrão Singleton</div>
+  </div>
+
+</body>
+
+</html>
