@@ -26,6 +26,16 @@ async function listarMultas(req, res) {
     const multas = await multasService.listarMultas(filters);
     return res.status(200).json(multas);
   } catch (err) {
+    if (err.statusCode) {
+      return res
+        .status(err.statusCode)
+        .json({ message: err.message, code: err.code });
+    }
+    if (err.name === "ZodError") {
+      return res
+        .status(400)
+        .json({ message: "Dados inválidos", details: err.errors });
+    }
     console.error(err);
     const error = InternalServerError("Erro ao listar multas", "INTERNAL_ERROR");
     return res.status(500).json({ message: error.message, code: error.code });
@@ -40,6 +50,11 @@ async function obterMulta(req, res) {
   } catch (err) {
     if (err.statusCode) {
       return res.status(err.statusCode).json({ message: err.message, code: err.code });
+    }
+    if (err.name === "ZodError") {
+      return res
+        .status(400)
+        .json({ message: "ID de multa inválido", details: err.errors });
     }
     console.error(err);
     const error = InternalServerError("Erro ao buscar multa", "INTERNAL_ERROR");
@@ -56,6 +71,11 @@ async function criarMulta(req, res) {
     if (err.statusCode) {
       return res.status(err.statusCode).json({ message: err.message, code: err.code });
     }
+    if (err.name === "ZodError") {
+      return res
+        .status(400)
+        .json({ message: "Dados da multa inválidos", details: err.errors });
+    }
     console.error(err);
     const error = InternalServerError("Erro ao criar multa", "INTERNAL_ERROR");
     return res.status(500).json({ message: error.message, code: error.code });
@@ -70,6 +90,14 @@ async function pagarMulta(req, res) {
   } catch (err) {
     if (err.statusCode) {
       return res.status(err.statusCode).json({ message: err.message, code: err.code });
+    }
+    if (err.name === "ZodError") {
+      return res
+        .status(400)
+        .json({
+          message: "ID de multa inválido para pagamento",
+          details: err.errors,
+        });
     }
     console.error(err);
     const error = InternalServerError("Erro ao pagar multa", "INTERNAL_ERROR");
