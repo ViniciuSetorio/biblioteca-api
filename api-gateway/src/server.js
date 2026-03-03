@@ -30,7 +30,7 @@ const MULTAS_URL = getEnvVar("MULTAS_URL", "http://servico-multas:3004");
 app.use("/usuarios", customProxy(USUARIOS_URL));
 app.use("/livros", customProxy(LIVROS_URL));
 app.use("/emprestimos", customProxy(EMPRESTIMOS_URL));
-app.use("/reservas", customProxy(`${EMPRESTIMOS_URL}/reservas`));
+app.use("/reservas", customProxy(EMPRESTIMOS_URL));
 app.use("/multas", customProxy(MULTAS_URL));
 
 // Health check
