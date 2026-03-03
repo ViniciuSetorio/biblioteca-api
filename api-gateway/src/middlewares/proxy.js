@@ -26,30 +26,61 @@ export const customProxy = (target) => async (req, res) => {
   const url = `${target}${req.url}`;
   
   try {
+    const isGetOrHead = ["GET", "HEAD"].includes(req.method.toUpperCase());
+
     const response = await client({
       method: req.method,
       url: url,
-      data: req,
-      headers: { 
+      data: isGetOrHead ? undefined : req,
+      headers: {
         ...req.headers,
-        host: new URL(target).host
+        host: new URL(target).host,
       },
-      responseType: 'stream',
+      responseType: "stream",
       validateStatus: () => true,
-      maxRedirects: 0
+      maxRedirects: 0,
     });
 
     res.status(response.status);
+
     Object.entries(response.headers).forEach(([key, value]) => {
+      const lowerKey = key.toLowerCase();
+      if (
+        [
+          "content-encoding",
+          "content-length",
+          "transfer-encoding",
+          "connection",
+          "keep-alive",
+        ].includes(lowerKey)
+      ) {
+        return;
+      }
       res.setHeader(key, value);
     });
+
+    // Pipe do stream de resposta direto para o Express
     response.data.pipe(res);
+
+    response.data.on("error", (err) => {
+      console.error(`Erro no stream ao acessar ${url}:`, err.message);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Stream Error", message: err.message });
+      }
+      res.end();
+    });
+
   } catch (err) {
     console.error(`Erro no Gateway ao acessar ${url}:`, err.message);
-    res.status(504).json({ 
-      error: "Gateway Timeout", 
-      message: "O serviço de destino demorou muito para responder ou está fora do ar.",
-      details: err.message 
-    });
+    if (!res.headersSent) {
+      res.status(504).json({
+        error: "Gateway Timeout",
+        message:
+          "O serviço de destino demorou muito para responder ou está fora do ar.",
+        details: err.message,
+      });
+    } else {
+      res.end();
+    }
   }
 };
