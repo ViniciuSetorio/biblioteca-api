@@ -80,13 +80,13 @@ A aplicação segue o padrão de arquitetura de **microsserviços**, onde cada f
 
 ### 1. **API Gateway** (Port 3000)
 
-O ponto de entrada único da aplicação. Funciona como um proxy reverso inteligente que roteia requisições para os serviços apropriados.
+O ponto de entrada único da aplicação. Funciona como um proxy reverso inteligente com **retry automático** que roteia requisições para os serviços apropriados e aguarda serviços em hibernação acordarem.
 
 **Função Principal:**
 - Rotear requisições para os microsserviços corretos
+- **Retry automático** com `axios-retry` em caso de erros 502/503/504 ou falhas de rede
 - Aplicar políticas de CORS
 - Fornecer health check centralizado
-- Registrar URLs de todos os serviços
 
 **Rotas Proxy:**
 - `/usuarios` → Serviço de Usuários (3001)
@@ -96,11 +96,12 @@ O ponto de entrada único da aplicação. Funciona como um proxy reverso intelig
 - `/multas` → Serviço de Multas (3004)
 - `/health` → Status de todos os serviços
 
-**Recursos:**
+**Configuração de Retry:**
 ```javascript
-// CORS configurado para frontend em https://bibton.vercel.app
-// Métodos: GET, POST, PUT, DELETE, PATCH, OPTIONS
-// Headers: Content-Type, Authorization
+// Tentativas: 5
+// Delay: Exponencial (aumenta progressivamente a cada tentativa)
+// Condição: Apenas erros de rede ou HTTP 502, 503, 504
+// Não faz retry em erros 4xx (ex: 404, 401)
 ```
 
 ---
@@ -258,7 +259,8 @@ GET    /health                   - Verificar saúde do serviço
 - **CORS** (v2.8.5) - Controle de requisições cross-origin
 - **pg** (v8.17.1) - Driver PostgreSQL
 - **Zod** (v4.3.5) - Validação de schemas
-- **express-http-proxy** - Proxy HTTP para API Gateway
+- **axios** (v1.6.7) - Cliente HTTP para proxy reverso no API Gateway
+- **axios-retry** (v4.0.0) - Retry automático para lidar com serviços em hibernação no Render
 
 ### Desenvolvimento
 - **Biome** (v2.3.11) - Linting e formatação
@@ -389,9 +391,9 @@ npm --prefix ./servico-usuarios dev
 biblioteca-api/
 ├── api-gateway/                    # Proxy reverso da API
 │   ├── src/
-│   │   ├── server.js              # Entry point do gateway
-│   │   ├── config/                # Configurações
-│   │   └── routes/                # Definição de rotas
+│   │   ├── server.js              # Entry point do gateway (rotas e CORS)
+│   │   └── middlewares/
+│   │       └── proxy.js           # Middleware de proxy (Axios + Retry)
 │   ├── Dockerfile
 │   └── package.json
 │
@@ -748,6 +750,8 @@ A aplicação está configurada para deploy no Render.com:
 - Auto-restart políticas
 ```
 
+> **ℹ️ Hibernação no Plano Gratuito:** No plano gratuito do Render, os serviços entram em modo de hibernação após período de inatividade. O API Gateway está configurado com **5 tentativas automáticas de retry** para lidar com o tempo de boot (~30s) dos microsserviços, evitando erros 502 imediatos para o usuário.
+
 **Deploy:**
 ```bash
 git push  # Deploy automático via Render
@@ -837,6 +841,7 @@ npm run test:cov
 ## 📝 Design Patterns Utilizados
 
 ### 1. **Singleton Pattern**
+
 Utilizado na classe `LibraryManager` para garantir apenas uma instância gerenciando empréstimos/reservas.
 
 ```javascript
@@ -861,6 +866,19 @@ Serviços utilizam repositories para abstrair acesso a dados.
 
 ### 4. **Error Handler Middleware**
 Tratamento centralizado de erros com middleware.
+
+### 5. **Retry Pattern**
+O API Gateway implementa o padrão de Retry para tolerância a falhas transitórias. Utiliza `axios-retry` para retentar automaticamente chamadas que falham com erros de servidor (502/503/504) ou de rede, cobrindo o tempo de boot dos microsserviços no Render.
+
+```javascript
+// api-gateway/src/middlewares/proxy.js
+axiosRetry(client, {
+  retries: 5,
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: (error) =>
+    !error.response || [502, 503, 504].includes(error.response.status),
+});
+```
 
 ---
 
