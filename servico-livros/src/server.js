@@ -9,11 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.use("/livros", livrosRoutes);
-
-app.use(errorHandler);
-
-app.get("/health", (req, res) => {
+app.get(["/health", "/livros/health"], (req, res) => {
   const db = getDatabase();
   db.query("SELECT 1")
     .then(() =>
@@ -31,6 +27,10 @@ app.get("/health", (req, res) => {
       }),
     );
 });
+
+app.use("/livros", livrosRoutes);
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, "0.0.0.0", () => {

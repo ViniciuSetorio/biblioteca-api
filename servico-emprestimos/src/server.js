@@ -10,12 +10,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.use("/emprestimos", emprestimosRoutes);
-app.use("/reservas", reservasRoutes);
-
-app.use(errorHandler);
-
-app.get("/health", (req, res) => {
+app.get(["/health", "/emprestimos/health", "/reservas/health"], (req, res) => {
   const db = getDatabase();
   db.query("SELECT 1")
     .then(() =>
@@ -33,6 +28,11 @@ app.get("/health", (req, res) => {
       }),
     );
 });
+
+app.use("/emprestimos", emprestimosRoutes);
+app.use("/reservas", reservasRoutes);
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3003;
 app.listen(PORT, "0.0.0.0", () => {
