@@ -71,13 +71,40 @@ export const customProxy = (target) => async (req, res) => {
         res.end();
       });
     } catch (err) {
-      console.error(`Erro final no Gateway ao acessar ${url}:`, err.message);
-      if (!res.headersSent) {
-        res.status(err.response?.status || 504).json({
+      console.error(`❌ Erro final no Gateway ao acessar ${url}:`, err.message);
+
+      let errorDetails = err.message;
+      let statusCode = err.response?.status || 504;
+
+      // Se o erro veio do serviço de destino, tentamos ler o corpo do erro
+      // Nota: como responseType é 'stream', err.response.data também é um stream
+      if (err.response?.data) {
+        try {
+          const stream = err.response.data;
+          const chunks = [];
+          for await (const chunk of stream) {
+            chunks.push(Buffer.from(chunk));
+          }
+          const body = Buffer.concat(chunks).toString("utf8");
+          console.error(`📝 Detalhes do erro do serviço (${url}):`, body);
+          try {
+            // Tenta parsear se for JSON para facilitar a leitura
+            errorDetails = JSON.parse(body);
+          } catch {
+            errorDetails = body;
+          }
+        } catch (e) {
+          console.error("Falha ao ler corpo do erro do stream:", e.message);
+        }
+      }
+
+      if (!res.headers_sent && !res.headersSent) {
+        res.status(statusCode).json({
           error: "Gateway Error",
+          serviceUrl: url,
           message:
-            "O serviço de destino não pôde ser alcançado ou retornou um erro persistente.",
-          details: err.message,
+            "O serviço de destino retornou um erro ou não pôde ser alcançado.",
+          details: errorDetails,
         });
       } else {
         res.end();
