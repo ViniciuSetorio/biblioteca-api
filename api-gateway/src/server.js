@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import proxy from 'express-http-proxy';
+import { customProxy } from "./middlewares/proxy.js";
 
 const app = express();
 
@@ -26,30 +26,31 @@ const EMPRESTIMOS_URL = getEnvVar(
 );
 const MULTAS_URL = getEnvVar("MULTAS_URL", "http://servico-multas:3004");
 
-// Rotas para cada microsserviço
-app.use("/usuarios", proxy(USUARIOS_URL));
-app.use("/livros", proxy(LIVROS_URL));
-app.use("/emprestimos", proxy(EMPRESTIMOS_URL));
-app.use("/reservas", proxy(`${EMPRESTIMOS_URL}/reservas`));
-app.use("/multas", proxy(MULTAS_URL));
+// Rotas para cada microsserviço usando proxy com retry
+app.use("/usuarios", customProxy(USUARIOS_URL));
+app.use("/livros", customProxy(LIVROS_URL));
+app.use("/emprestimos", customProxy(EMPRESTIMOS_URL));
+app.use("/reservas", customProxy(`${EMPRESTIMOS_URL}/reservas`));
+app.use("/multas", customProxy(MULTAS_URL));
 
 // Health check
 app.get("/health", (req, res) => {
-  res.json({ 
-    status: "OK", 
+  res.json({
+    status: "healthy",
     timestamp: new Date().toISOString(),
+    retryConfig: "Axios + Axios-Retry (5 attempts)",
     services: {
       usuarios: USUARIOS_URL,
       livros: LIVROS_URL,
       emprestimos: EMPRESTIMOS_URL,
-      multas: MULTAS_URL
-    }
+      multas: MULTAS_URL,
+    },
   });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ API Gateway rodando na porta ${PORT} 🚀`);
+  console.log(`API Gateway rodando na porta ${PORT}`);
   console.log(`   🔗 http://localhost:${PORT}`);
   console.log(`   📚 Usuários: ${USUARIOS_URL}`);
   console.log(`   📚 Livros: ${LIVROS_URL}`);
