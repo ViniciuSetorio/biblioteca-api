@@ -5,11 +5,16 @@ import { customProxy } from "./middlewares/proxy.js";
 const app = express();
 
 // CORS mais permissivo para produção
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://bibton.vercel.app/',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+const origin = (
+  process.env.FRONTEND_URL || "https://bibton.vercel.app/"
+).replace(/\/$/, "");
+app.use(
+  cors({
+    origin: origin,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // Helper para filtrar placeholders literais como ${VAR} que o Render às vezes injeta
 const getEnvVar = (v, fallback) => {
