@@ -6,7 +6,7 @@ const app = express();
 
 // CORS mais permissivo para produção
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://bibton.vercel.app',
+  origin: process.env.FRONTEND_URL || 'https://bibton.vercel.app/',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
