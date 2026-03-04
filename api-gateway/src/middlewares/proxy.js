@@ -107,11 +107,22 @@ export const customProxy = (target) => async (req, res) => {
       }
 
       if (!res.headers_sent && !res.headersSent) {
+        let finalMessage =
+          "O serviço de destino retornou um erro ou não pôde ser alcançado.";
+
+        if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
+          finalMessage =
+            "O serviço de destino demorou muito para responder (Timeout). Ele pode estar acordando.";
+        } else if (err.code === "ECONNREFUSED") {
+          finalMessage =
+            "Não foi possível conectar ao serviço de destino (Conexão Recusada).";
+        }
+
         res.status(statusCode).json({
           error: "Gateway Error",
           serviceUrl: url,
-          message:
-            "O serviço de destino retornou um erro ou não pôde ser alcançado.",
+          code: err.code,
+          message: finalMessage,
           details: errorDetails,
         });
       } else {
