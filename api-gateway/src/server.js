@@ -3,6 +3,8 @@ import cors from 'cors';
 import { customProxy } from "./middlewares/proxy.js";
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // CORS mais permissivo para produção
 const origin = (

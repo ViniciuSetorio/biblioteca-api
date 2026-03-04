@@ -29,12 +29,19 @@ export const customProxy = (target) => async (req, res) => {
     try {
       const isGetOrHead = ["GET", "HEAD"].includes(req.method.toUpperCase());
 
+      // Filtra headers que NÃO devem ser repassados ou que o Axios deve gerenciar
+      const headers = { ...req.headers };
+      delete headers.host;
+      delete headers["content-length"];
+      delete headers["transfer-encoding"];
+      delete headers.connection;
+
       const response = await client({
         method: req.method,
         url: url,
-        data: isGetOrHead ? undefined : req,
+        data: isGetOrHead ? undefined : req.body || req,
         headers: {
-          ...req.headers,
+          ...headers,
           host: new URL(target).host,
         },
         responseType: "stream",
