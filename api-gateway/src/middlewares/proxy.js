@@ -2,19 +2,29 @@ import axios from "axios";
 import axiosRetry from "axios-retry";
 
 // Configuração do Axios com Retry para lidar com a hibernação do Render
-const client = axios.create();
+const client = axios.create({
+  timeout: 10000, // 10 segundos por tentativa
+});
 
 axiosRetry(client, {
-  retries: 5,
-  retryDelay: () => {
-    console.log("[Retry] Aguardando 5 segundos para a próxima tentativa...");
-    return 5000;
+  retries: 10,
+  retryDelay: (retryCount) => {
+    console.log(`[Retry] Tentativa ${retryCount}/10 - Aguardando 1.5s...`);
+    return 1500;
   },
   retryCondition: (error) => {
     const isNetworkError = !error.response;
     const isServerError =
       error.response && [502, 503, 504].includes(error.response.status);
-    return isNetworkError || isServerError;
+    const isTimeout = error.code === "ECONNABORTED";
+
+    const shouldRetry = isNetworkError || isServerError || isTimeout;
+    if (shouldRetry) {
+      console.log(
+        `⚠️ Falha temporária (${error.code || error.response?.status}). Agendando próximo envio...`,
+      );
+    }
+    return shouldRetry;
   },
   shouldResetTimeout: true,
 });
@@ -47,7 +57,7 @@ export const customProxy = (target) => async (req, res) => {
         responseType: "stream",
         validateStatus: (status) => status < 500,
         maxRedirects: 0,
-        timeout: 25000, // 25 segundos para evitar o timeout default do Render (30s)
+        timeout: 10000, // 10 segundos por tentativa
       });
 
       res.status(response.status);

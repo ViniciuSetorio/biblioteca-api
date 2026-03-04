@@ -13,13 +13,13 @@ services:
       - key: NODE_ENV
         value: production
       - key: USUARIOS_URL
-        value: https://biblioteca-usuarios.onrender.com
+        value: http://biblioteca-usuarios:3001
       - key: LIVROS_URL
-        value: https://biblioteca-livros.onrender.com
+        value: http://biblioteca-livros:3002
       - key: EMPRESTIMOS_URL
-        value: https://biblioteca-emprestimos.onrender.com
+        value: http://biblioteca-emprestimos:3003
       - key: MULTAS_URL
-        value: https://biblioteca-multas.onrender.com
+        value: http://biblioteca-multas:3004
       - key: FRONTEND_URL
         value: https://bibton.vercel.app/
 
@@ -38,7 +38,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: EMPRESTIMOS_SERVICE_URL
-        value: https://biblioteca-emprestimos.onrender.com
+        value: http://biblioteca-emprestimos:3003
 
   # Serviço de Livros
   - type: web
@@ -54,9 +54,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: USUARIOS_SERVICE_URL
-        value: https://biblioteca-usuarios.onrender.com
+        value: http://biblioteca-usuarios:3001
       - key: EMPRESTIMOS_SERVICE_URL
-        value: https://biblioteca-emprestimos.onrender.com
+        value: http://biblioteca-emprestimos:3003
 
   # Serviço de Empréstimos
   - type: web
@@ -72,13 +72,13 @@ services:
       - key: NODE_ENV
         value: production
       - key: USUARIOS_SERVICE_URL
-        value: https://biblioteca-usuarios.onrender.com
+        value: http://biblioteca-usuarios:3001
       - key: LIVROS_SERVICE_URL
-        value: https://biblioteca-livros.onrender.com
+        value: http://biblioteca-livros:3002
       - key: MULTAS_SERVICE_URL
-        value: https://biblioteca-multas.onrender.com
+        value: http://biblioteca-multas:3004
       - key: NOTIFICACOES_SERVICE_URL
-        value: https://biblioteca-notificacoes.onrender.com
+        value: http://biblioteca-notificacoes:3005
 
   # Serviço de Multas
   - type: web
@@ -94,7 +94,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: EMPRESTIMOS_SERVICE_URL
-        value: https://biblioteca-emprestimos.onrender.com
+        value: http://biblioteca-emprestimos:3003
 
   # Serviço de Notificações
   - type: web
@@ -110,8 +110,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: USUARIOS_SERVICE_URL
-        value: https://biblioteca-usuarios.onrender.com
+        value: http://biblioteca-usuarios:3001
       - key: EMPRESTIMOS_SERVICE_URL
-        value: https://biblioteca-emprestimos.onrender.com
+        value: http://biblioteca-emprestimos:3003
       - key: LIVROS_SERVICE_URL
-        value: https://biblioteca-livros.onrender.com
+        value: http://biblioteca-livros:3002

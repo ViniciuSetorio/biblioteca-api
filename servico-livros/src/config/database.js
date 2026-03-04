@@ -14,7 +14,7 @@ function createPool() {
   if (process.env.NODE_ENV === "production" || dbUrl) {
     if (!dbUrl) {
       console.warn(
-        "⚠️ DATABASE_URL ou LIVROS_DB_URL não encontrados em ambiente de produção!",
+        "DATABASE_URL ou LIVROS_DB_URL não encontrados em ambiente de produção!",
       );
     } else {
       const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ":****@");
@@ -66,14 +66,6 @@ export default function getDatabase() {
       poolInstance.connect((err, client, release) => {
         if (err) {
           console.error("Erro ao conectar ao banco:", err.message);
-          if (
-            process.env.NODE_ENV === "production" ||
-            process.env.DATABASE_URL
-          ) {
-            console.error(
-              "Aplicação continuando em modo resiliente (sem banco)",
-            );
-          }
         } else {
           console.log("Banco de dados conectado com sucesso!");
           release();
@@ -83,18 +75,20 @@ export default function getDatabase() {
       console.error("Erro crítico ao criar pool de conexão:", error.message);
       if (process.env.NODE_ENV === "production" || process.env.DATABASE_URL) {
         console.error(
-          "⚠️ Suprimindo erro de inicialização do banco para manter serviço UP",
+          "Suprimindo erro de inicialização para manter serviço UP",
         );
-        return {
+        // Salva mock para evitar retentativas custosas
+        poolInstance = {
           query: () =>
             Promise.reject(
-              new Error("Banco de dados indisponível (Erro de Configuração)"),
+              new Error("Banco de dados indisponível (Erro de Inicialização)"),
             ),
           connect: (cb) => cb(new Error("Banco de dados indisponível")),
           on: () => {},
         };
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
   return poolInstance;
