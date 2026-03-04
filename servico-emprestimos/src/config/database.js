@@ -54,24 +54,47 @@ export default function getDatabase() {
   if (!poolInstance) {
     try {
       poolInstance = createPool();
-      
+
+      poolInstance.on("error", (err) => {
+        console.error(
+          "Erro inesperado no pool do banco de dados:",
+          err.message,
+        );
+      });
+
       // Teste de conexão assíncrono (não bloqueia a inicialização)
       poolInstance.connect((err, client, release) => {
         if (err) {
           console.error("Erro ao conectar ao banco:", err.message);
-          if (process.env.NODE_ENV === 'production') {
-            // Em produção, queremos saber do erro mas não derrubar a app
-            console.error("Aplicação continuando mesmo com erro no banco");
+          if (
+            process.env.NODE_ENV === "production" ||
+            process.env.DATABASE_URL
+          ) {
+            console.error(
+              "Aplicação continuando em modo resiliente (sem banco)",
+            );
           }
         } else {
           console.log("Banco de dados conectado com sucesso!");
           release();
         }
       });
-      
     } catch (error) {
-      console.error("Erro ao criar pool de conexão:", error.message);
-      throw error; // Em desenvolvimento, pode querer parar a app
+      console.error("Erro crítico ao criar pool de conexão:", error.message);
+      if (process.env.NODE_ENV === "production" || process.env.DATABASE_URL) {
+        console.error(
+          "Suprimindo erro de inicialização do banco para manter serviço UP",
+        );
+        return {
+          query: () =>
+            Promise.reject(
+              new Error("Banco de dados indisponível (Erro de Configuração)"),
+            ),
+          connect: (cb) => cb(new Error("Banco de dados indisponível")),
+          on: () => {},
+        };
+      }
+      throw error;
     }
   }
   return poolInstance;

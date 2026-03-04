@@ -40,6 +40,7 @@ export const customProxy = (target) => async (req, res) => {
         responseType: "stream",
         validateStatus: (status) => status < 500,
         maxRedirects: 0,
+        timeout: 25000, // 25 segundos para evitar o timeout default do Render (30s)
       });
 
       res.status(response.status);
@@ -71,7 +72,7 @@ export const customProxy = (target) => async (req, res) => {
         res.end();
       });
     } catch (err) {
-      console.error(`❌ Erro final no Gateway ao acessar ${url}:`, err.message);
+      console.error(`Erro final no Gateway ao acessar ${url}:`, err.message);
 
       let errorDetails = err.message;
       let statusCode = err.response?.status || 504;
@@ -86,7 +87,7 @@ export const customProxy = (target) => async (req, res) => {
             chunks.push(Buffer.from(chunk));
           }
           const body = Buffer.concat(chunks).toString("utf8");
-          console.error(`📝 Detalhes do erro do serviço (${url}):`, body);
+          console.error(`Detalhes do erro do serviço (${url}):`, body);
           try {
             // Tenta parsear se for JSON para facilitar a leitura
             errorDetails = JSON.parse(body);
