@@ -98,8 +98,8 @@ O ponto de entrada único da aplicação. Funciona como um proxy reverso intelig
 
 **Configuração de Retry:**
 ```javascript
-// Tentativas: 5
-// Delay: Exponencial (aumenta progressivamente a cada tentativa)
+// Tentativas: 3
+// Delay: 1.5s
 // Condição: Apenas erros de rede ou HTTP 502, 503, 504
 // Não faz retry em erros 4xx (ex: 404, 401)
 ```
@@ -530,12 +530,11 @@ GET    /health                       - Health check do serviço
 ```json
 [
   {
-    "id": "1",
-    "nome": "João Silva",
-    "email": "joao@example.com",
-    "cpf": "123.456.789-10",
-    "telefone": "(11) 99999-9999",
-    "data_cadastro": "2024-01-15T10:30:00Z"
+    "id": 1,
+    "nome": "Admin Biblioteca",
+    "email": "admin@biblioteca.com",
+    "cargo": "bibliotecario",
+    "created_at": "2024-01-15T10:30:00.000Z"
   }
 ]
 ```
@@ -554,14 +553,14 @@ GET    /health                       - Health check do serviço
 **Exemplo de Resposta (POST /livros):**
 ```json
 {
-  "id": "5",
+  "id": 1,
   "titulo": "Clean Code",
   "autor": "Robert C. Martin",
-  "isbn": "0132350882",
-  "quantidade": 5,
-  "quantidade_disponivel": 5,
-  "ano_publicacao": 2008,
-  "categoria": "Programação"
+  "isbn": "9780132350884",
+  "publicado_em": "2008-08-01",
+  "criado_por": 1,
+  "copias_disponiveis": 3,
+  "created_at": "2024-01-15T10:30:00.000Z"
 }
 ```
 
@@ -584,11 +583,12 @@ GET    /health                       - Health check do serviço
 **Exemplo de Resposta (POST /emprestimos):**
 ```json
 {
-  "id": "10",
-  "usuario_id": "1",
-  "livro_id": "5",
-  "data_emprestimo": "2024-01-20T14:00:00Z",
-  "data_devolucao_prevista": "2024-02-03T23:59:59Z",
+  "id": 1,
+  "usuario_id": 1,
+  "livro_id": 1,
+  "data_emprestimo": "2024-01-20T14:00:00.000Z",
+  "data_prevista_devolucao": "2024-02-03T23:59:59.000Z",
+  "data_devolucao": null,
   "status": "ativo"
 }
 ```
@@ -608,13 +608,12 @@ GET    /health                       - Health check do serviço
 ```json
 [
   {
-    "id": "1",
-    "emprestimo_id": "10",
-    "usuario_id": "1",
+    "id": 1,
+    "emprestimos_id": 1,
     "valor": 25.50,
-    "motivo": "Atraso de 5 dias",
-    "data_geracao": "2024-02-04T08:00:00Z",
-    "status": "pendente"
+    "pago": false,
+    "data_pagamento": null,
+    "created_at": "2024-02-04T08:00:00.000Z"
   }
 ]
 ```
@@ -657,75 +656,67 @@ Cada serviço possui seu próprio banco de dados PostgreSQL independente:
 #### Tabela: usuarios
 
 ```sql
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
   id SERIAL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
-  cpf VARCHAR(14) UNIQUE NOT NULL,
-  telefone VARCHAR(20),
-  endereco TEXT,
-  data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  ativo BOOLEAN DEFAULT true
+  cargo VARCHAR(50) CHECK (cargo IN ('bibliotecario', 'membro')) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 #### Tabela: livros
 
 ```sql
-CREATE TABLE livros (
+CREATE TABLE IF NOT EXISTS livros (
   id SERIAL PRIMARY KEY,
   titulo VARCHAR(255) NOT NULL,
   autor VARCHAR(255) NOT NULL,
-  isbn VARCHAR(13) UNIQUE,
-  quantidade INT DEFAULT 1,
-  quantidade_disponivel INT DEFAULT 1,
-  ano_publicacao INT,
-  categoria VARCHAR(100),
-  descricao TEXT,
-  data_adicao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  isbn VARCHAR(20) UNIQUE,
+  publicado_em DATE,
+  criado_por INTEGER,
+  copias_disponiveis INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 #### Tabela: emprestimos
 
 ```sql
-CREATE TABLE emprestimos (
+CREATE TABLE IF NOT EXISTS emprestimos (
   id SERIAL PRIMARY KEY,
-  usuario_id INT NOT NULL,
-  livro_id INT NOT NULL,
+  usuario_id INTEGER NOT NULL,
+  livro_id INTEGER NOT NULL,
   data_emprestimo TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  data_devolucao_prevista TIMESTAMP NOT NULL,
-  data_devolucao_real TIMESTAMP,
-  status VARCHAR(50) DEFAULT 'ativo',
-  renovacoes INT DEFAULT 0
+  data_prevista_devolucao TIMESTAMP NOT NULL,
+  data_devolucao TIMESTAMP,
+  status VARCHAR(20) DEFAULT 'ativo' CHECK (status IN ('ativo', 'devolvido'))
 );
 ```
 
 #### Tabela: reservas
 
 ```sql
-CREATE TABLE reservas (
+CREATE TABLE IF NOT EXISTS reservas (
   id SERIAL PRIMARY KEY,
-  usuario_id INT NOT NULL,
-  livro_id INT NOT NULL,
+  usuario_id INTEGER NOT NULL,
+  livro_id INTEGER NOT NULL,
   data_reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  posicao_fila INT,
-  status VARCHAR(50) DEFAULT 'ativa'
+  data_expiracao TIMESTAMP NOT NULL,
+  status VARCHAR(20) DEFAULT 'ativa' CHECK (status IN ('ativa', 'cancelada', 'expirada'))
 );
 ```
 
 #### Tabela: multas
 
 ```sql
-CREATE TABLE multas (
+CREATE TABLE IF NOT EXISTS multas (
   id SERIAL PRIMARY KEY,
-  emprestimo_id INT NOT NULL,
-  usuario_id INT NOT NULL,
-  valor DECIMAL(10, 2) NOT NULL,
-  motivo VARCHAR(255),
-  data_geracao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  emprestimos_id INTEGER NOT NULL,
+  valor DECIMAL(10,2) NOT NULL,
+  pago BOOLEAN DEFAULT false,
   data_pagamento TIMESTAMP,
-  status VARCHAR(50) DEFAULT 'pendente'
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -750,7 +741,7 @@ A aplicação está configurada para deploy no Render.com:
 - Auto-restart políticas
 ```
 
-> **ℹ️ Hibernação no Plano Gratuito:** No plano gratuito do Render, os serviços entram em modo de hibernação após período de inatividade. O API Gateway está configurado com **5 tentativas automáticas de retry** para lidar com o tempo de boot (~30s) dos microsserviços, evitando erros 502 imediatos para o usuário.
+> **ℹ️ Hibernação no Plano Gratuito:** No plano gratuito do Render, os serviços entram em modo de hibernação após período de inatividade. O API Gateway está configurado com **3 tentativas automáticas de retry** para lidar com o tempo de boot (~30s) dos microsserviços, evitando erros 502 imediatos para o usuário.
 
 **Deploy:**
 ```bash
@@ -873,10 +864,13 @@ O API Gateway implementa o padrão de Retry para tolerância a falhas transitór
 ```javascript
 // api-gateway/src/middlewares/proxy.js
 axiosRetry(client, {
-  retries: 5,
-  retryDelay: axiosRetry.exponentialDelay,
-  retryCondition: (error) =>
-    !error.response || [502, 503, 504].includes(error.response.status),
+  retries: 3,
+  retryDelay: (retryCount) => {
+    return 1500;
+  },
+  retryCondition: (error) => {
+    // ... logic for 502, 503, 504 Network and Timeout errors
+  }
 });
 ```
 

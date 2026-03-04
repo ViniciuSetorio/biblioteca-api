@@ -54,7 +54,7 @@ app.get("/health", (req, res) => {
   res.json({
     status: "healthy",
     timestamp: new Date().toISOString(),
-    retryConfig: "Axios + Axios-Retry (5 attempts)",
+    retryConfig: "Axios + Axios-Retry (3 attempts)",
     services: {
       usuarios: USUARIOS_URL,
       livros: LIVROS_URL,
