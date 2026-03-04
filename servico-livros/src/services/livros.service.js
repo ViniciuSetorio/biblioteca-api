@@ -28,12 +28,23 @@ export default function createLivrosService(db) {
       copias_disponiveis = 0,
     } = data;
 
+    // Validação básica
+    if (!titulo || !autor) {
+      const error = new Error("Título e Autor são campos obrigatórios");
+      error.code = "MISSING_REQUIRED_FIELDS";
+      error.statusCode = 400;
+      throw error;
+    }
+
     // Verificar se usuário existe e é bibliotecário
     if (criado_por) {
       try {
-        const usuariosServiceUrl = process.env.USUARIOS_SERVICE_URL || 'http://servico-usuarios:3001';
-        const response = await fetch(`${usuariosServiceUrl}/usuarios/${criado_por}`);
-        
+        const usuariosServiceUrl =
+          process.env.USUARIOS_SERVICE_URL || "http://servico-usuarios:3001";
+        const response = await fetch(
+          `${usuariosServiceUrl}/usuarios/${criado_por}`,
+        );
+
         if (!response.ok) {
           const error = new Error("Usuário criador não encontrado");
           error.code = "CREATOR_NOT_FOUND";
@@ -42,9 +53,11 @@ export default function createLivrosService(db) {
         }
 
         const usuario = await response.json();
-        
+
         if (usuario.cargo !== "bibliotecario") {
-          const error = new Error("Apenas bibliotecários podem cadastrar livros");
+          const error = new Error(
+            "Apenas bibliotecários podem cadastrar livros",
+          );
           error.code = "INSUFFICIENT_ROLE";
           error.statusCode = 422;
           throw error;
@@ -52,8 +65,7 @@ export default function createLivrosService(db) {
       } catch (error) {
         if (error.statusCode) throw error;
         console.error("Erro ao verificar usuário:", error.message);
-        // Se não conseguir verificar, permite criar mesmo assim?
-        // Por segurança, vamos bloquear
+        // Se não conseguir verificar, bloqueamos por segurança
         const err = new Error("Não foi possível verificar o usuário criador");
         err.code = "USER_SERVICE_UNAVAILABLE";
         err.statusCode = 503;
