@@ -126,6 +126,10 @@ export const customProxy = (target) => async (req, res) => {
         } else if (err.code === "ECONNREFUSED") {
           finalMessage =
             "Não foi possível conectar ao serviço de destino (Conexão Recusada).";
+        } else if (err.code === "ENOTFOUND") {
+          statusCode = 503;
+          finalMessage =
+            "Não foi possível localizar o endereço do serviço de destino (DNS Fail).";
         }
 
         res.status(statusCode).json({

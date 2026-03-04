@@ -22,7 +22,9 @@ class NotificacaoService {
     // Buscar dados completos do usuário (via API)
     let usuario = {};
     try {
-      const usuariosServiceUrl = process.env.USUARIOS_SERVICE_URL || 'http://servico-usuarios:3001';
+      const usuariosServiceUrl =
+        process.env.USUARIOS_SERVICE_URL ||
+        "https://biblioteca-usuarios.onrender.com";
       const response = await fetch(`${usuariosServiceUrl}/usuarios/${usuarioId}`);
       if (response.ok) {
         usuario = await response.json();
@@ -35,12 +37,16 @@ class NotificacaoService {
     let livro = {};
     if (emprestimoId) {
       try {
-        const emprestimosServiceUrl = process.env.EMPRESTIMOS_SERVICE_URL || 'http://servico-emprestimos:3003';
+        const emprestimosServiceUrl =
+          process.env.EMPRESTIMOS_SERVICE_URL ||
+          "https://biblioteca-emprestimos.onrender.com";
         const response = await fetch(`${emprestimosServiceUrl}/emprestimos/${emprestimoId}`);
         if (response.ok) {
           const emprestimo = await response.json();
           
-          const livrosServiceUrl = process.env.LIVROS_SERVICE_URL || 'http://servico-livros:3002';
+          const livrosServiceUrl =
+            process.env.LIVROS_SERVICE_URL ||
+            "https://biblioteca-livros.onrender.com";
           const livroResponse = await fetch(`${livrosServiceUrl}/livros/${emprestimo.livro_id}`);
           if (livroResponse.ok) {
             livro = await livroResponse.json();

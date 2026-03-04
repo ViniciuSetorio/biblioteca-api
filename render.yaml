@@ -13,13 +13,13 @@ services:
       - key: NODE_ENV
         value: production
       - key: USUARIOS_URL
-        value: http://biblioteca-usuarios:3001
+        value: https://biblioteca-usuarios.onrender.com
       - key: LIVROS_URL
-        value: http://biblioteca-livros:3002
+        value: https://biblioteca-livros.onrender.com
       - key: EMPRESTIMOS_URL
-        value: http://biblioteca-emprestimos:3003
+        value: https://biblioteca-emprestimos.onrender.com
       - key: MULTAS_URL
-        value: http://biblioteca-multas:3004
+        value: https://biblioteca-multas.onrender.com
       - key: FRONTEND_URL
         value: https://bibton.vercel.app/
 
@@ -38,7 +38,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: EMPRESTIMOS_SERVICE_URL
-        value: http://biblioteca-emprestimos:3003
+        value: https://biblioteca-emprestimos.onrender.com
       - key: PORT
         value: 3001
 
@@ -56,9 +56,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: USUARIOS_SERVICE_URL
-        value: http://biblioteca-usuarios:3001
+        value: https://biblioteca-usuarios.onrender.com
       - key: EMPRESTIMOS_SERVICE_URL
-        value: http://biblioteca-emprestimos:3003
+        value: https://biblioteca-emprestimos.onrender.com
       - key: PORT
         value: 3002
 
@@ -76,13 +76,13 @@ services:
       - key: NODE_ENV
         value: production
       - key: USUARIOS_SERVICE_URL
-        value: http://biblioteca-usuarios:3001
+        value: https://biblioteca-usuarios.onrender.com
       - key: LIVROS_SERVICE_URL
-        value: http://biblioteca-livros:3002
+        value: https://biblioteca-livros.onrender.com
       - key: MULTAS_SERVICE_URL
-        value: http://biblioteca-multas:3004
+        value: https://biblioteca-multas.onrender.com
       - key: NOTIFICACOES_SERVICE_URL
-        value: http://biblioteca-notificacoes:3005
+        value: https://biblioteca-notificacoes.onrender.com
       - key: PORT
         value: 3003
 
@@ -100,7 +100,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: EMPRESTIMOS_SERVICE_URL
-        value: http://biblioteca-emprestimos:3003
+        value: https://biblioteca-emprestimos.onrender.com
       - key: PORT
         value: 3004
 
@@ -118,10 +118,10 @@ services:
       - key: NODE_ENV
         value: production
       - key: USUARIOS_SERVICE_URL
-        value: http://biblioteca-usuarios:3001
+        value: https://biblioteca-usuarios.onrender.com
       - key: EMPRESTIMOS_SERVICE_URL
-        value: http://biblioteca-emprestimos:3003
+        value: https://biblioteca-emprestimos.onrender.com
       - key: LIVROS_SERVICE_URL
-        value: http://biblioteca-livros:3002
+        value: https://biblioteca-livros.onrender.com
       - key: PORT
         value: 3005

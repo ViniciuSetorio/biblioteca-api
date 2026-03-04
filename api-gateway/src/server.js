@@ -27,14 +27,20 @@ const getEnvVar = (v, fallback) => {
 // URLs dos serviços (podem vir de variáveis de ambiente)
 const USUARIOS_URL = getEnvVar(
   "USUARIOS_URL",
-  "http://biblioteca-usuarios:3001",
+  "https://biblioteca-usuarios.onrender.com",
 );
-const LIVROS_URL = getEnvVar("LIVROS_URL", "http://biblioteca-livros:3002");
+const LIVROS_URL = getEnvVar(
+  "LIVROS_URL",
+  "https://biblioteca-livros.onrender.com",
+);
 const EMPRESTIMOS_URL = getEnvVar(
   "EMPRESTIMOS_URL",
-  "http://biblioteca-emprestimos:3003",
+  "https://biblioteca-emprestimos.onrender.com",
 );
-const MULTAS_URL = getEnvVar("MULTAS_URL", "http://biblioteca-multas:3004");
+const MULTAS_URL = getEnvVar(
+  "MULTAS_URL",
+  "https://biblioteca-multas.onrender.com",
+);
 
 // Rotas para cada microsserviço usando proxy com retry
 app.use("/usuarios", customProxy(USUARIOS_URL));

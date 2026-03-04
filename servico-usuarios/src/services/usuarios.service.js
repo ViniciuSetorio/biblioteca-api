@@ -91,7 +91,9 @@ export default function createUsuariosService(db) {
 
     // Verificar empréstimos ativos via HTTP
     try {
-      const emprestimosServiceUrl = process.env.EMPRESTIMOS_SERVICE_URL || 'http://servico-emprestimos:3003';
+      const emprestimosServiceUrl =
+        process.env.EMPRESTIMOS_SERVICE_URL ||
+        "https://biblioteca-emprestimos.onrender.com";
       const response = await fetch(`${emprestimosServiceUrl}/emprestimos?usuarioId=${id}&status=ativo`);
       
       if (response.ok) {

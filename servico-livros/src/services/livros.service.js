@@ -40,7 +40,8 @@ export default function createLivrosService(db) {
     if (criado_por) {
       try {
         const usuariosServiceUrl =
-          process.env.USUARIOS_SERVICE_URL || "http://servico-usuarios:3001";
+          process.env.USUARIOS_SERVICE_URL ||
+          "https://biblioteca-usuarios.onrender.com";
         const response = await fetch(
           `${usuariosServiceUrl}/usuarios/${criado_por}`,
         );
@@ -88,7 +89,9 @@ export default function createLivrosService(db) {
 
     if (criado_por !== undefined) {
       try {
-        const usuariosServiceUrl = process.env.USUARIOS_SERVICE_URL || 'http://servico-usuarios:3001';
+        const usuariosServiceUrl =
+          process.env.USUARIOS_SERVICE_URL ||
+          "https://biblioteca-usuarios.onrender.com";
         const response = await fetch(`${usuariosServiceUrl}/usuarios/${criado_por}`);
         
         if (!response.ok) {
@@ -136,7 +139,9 @@ export default function createLivrosService(db) {
   async function removerLivro(id) {
     // Verificar se livro tem empréstimos ativos
     try {
-      const emprestimosServiceUrl = process.env.EMPRESTIMOS_SERVICE_URL || 'http://servico-emprestimos:3003';
+      const emprestimosServiceUrl =
+        process.env.EMPRESTIMOS_SERVICE_URL ||
+        "https://biblioteca-emprestimos.onrender.com";
       const response = await fetch(`${emprestimosServiceUrl}/emprestimos?livroId=${id}&status=ativo`);
       
       if (response.ok) {

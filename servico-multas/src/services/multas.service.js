@@ -51,7 +51,9 @@ export default function createMultasService(db) {
     
     // Verificar se empréstimo existe (opcional, não falha se serviço estiver fora)
     try {
-      const emprestimosServiceUrl = process.env.EMPRESTIMOS_SERVICE_URL || 'http://servico-emprestimos:3003';
+      const emprestimosServiceUrl =
+        process.env.EMPRESTIMOS_SERVICE_URL ||
+        "https://biblioteca-emprestimos.onrender.com";
       await fetch(`${emprestimosServiceUrl}/emprestimos/${emprestimoId}`);
     } catch (error) {
       console.warn(`Serviço de empréstimos indisponível, criando multa para empréstimo ${emprestimoId}`);

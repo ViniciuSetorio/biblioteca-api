@@ -20,7 +20,9 @@ export function createLibraryManager() {
         await client.query("BEGIN");
 
         // Verificar se usuário existe
-        const usuariosServiceUrl = process.env.USUARIOS_SERVICE_URL || 'http://servico-usuarios:3001';
+        const usuariosServiceUrl =
+          process.env.USUARIOS_SERVICE_URL ||
+          "https://biblioteca-usuarios.onrender.com";
         const userResponse = await fetch(`${usuariosServiceUrl}/usuarios/${usuarioId}`);
         
         if (!userResponse.ok) {
@@ -28,7 +30,9 @@ export function createLibraryManager() {
         }
 
         // Verificar disponibilidade do livro via serviço de livros
-        const livrosServiceUrl = process.env.LIVROS_SERVICE_URL || 'http://servico-livros:3002';
+        const livrosServiceUrl =
+          process.env.LIVROS_SERVICE_URL ||
+          "https://biblioteca-livros.onrender.com";
         const livroResponse = await fetch(`${livrosServiceUrl}/livros/${livroId}`);
         
         if (!livroResponse.ok) {
@@ -60,7 +64,9 @@ export function createLibraryManager() {
         await client.query("COMMIT");
 
         // Notificar usuário (assíncrono)
-        const notificacoesServiceUrl = process.env.NOTIFICACOES_SERVICE_URL || 'http://servico-notificacoes:3005';
+        const notificacoesServiceUrl =
+          process.env.NOTIFICACOES_SERVICE_URL ||
+          "https://biblioteca-notificacoes.onrender.com";
         fetch(`${notificacoesServiceUrl}/notificacoes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -109,7 +115,9 @@ export function createLibraryManager() {
         );
 
         // Atualizar cópias disponíveis
-        const livrosServiceUrl = process.env.LIVROS_SERVICE_URL || 'http://servico-livros:3002';
+        const livrosServiceUrl =
+          process.env.LIVROS_SERVICE_URL ||
+          "https://biblioteca-livros.onrender.com";
         const livroResponse = await fetch(`${livrosServiceUrl}/livros/${emprestimo.livro_id}`);
         
         if (livroResponse.ok) {
@@ -129,7 +137,9 @@ export function createLibraryManager() {
           const diasAtraso = Math.ceil((dataDevolucao - dataPrevista) / (1000 * 60 * 60 * 24));
           const valorMulta = diasAtraso * 2;
 
-          const multasServiceUrl = process.env.MULTAS_SERVICE_URL || 'http://servico-multas:3004';
+          const multasServiceUrl =
+            process.env.MULTAS_SERVICE_URL ||
+            "https://biblioteca-multas.onrender.com";
           fetch(`${multasServiceUrl}/multas`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -203,7 +213,9 @@ export function createLibraryManager() {
         }
 
         // Verificar livro
-        const livrosServiceUrl = process.env.LIVROS_SERVICE_URL || 'http://servico-livros:3002';
+        const livrosServiceUrl =
+          process.env.LIVROS_SERVICE_URL ||
+          "https://biblioteca-livros.onrender.com";
         const livroResponse = await fetch(`${livrosServiceUrl}/livros/${livroId}`);
         if (!livroResponse.ok) {
           throw NotFoundError("Livro não encontrado", "BOOK_NOT_FOUND");
