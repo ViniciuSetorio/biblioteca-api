@@ -3,13 +3,13 @@ import axiosRetry from "axios-retry";
 
 // Configuração do Axios com Retry para lidar com a hibernação do Render
 const client = axios.create({
-  timeout: 10000, // 10 segundos por tentativa
+  timeout: 5000, // 5 segundos por tentativa
 });
 
 axiosRetry(client, {
-  retries: 10,
+  retries: 4,
   retryDelay: (retryCount) => {
-    console.log(`[Retry] Tentativa ${retryCount}/10 - Aguardando 1.5s...`);
+    console.log(`[Retry] Tentativa ${retryCount}/4 - Aguardando 1.5s...`);
     return 1500;
   },
   retryCondition: (error) => {
@@ -57,7 +57,7 @@ export const customProxy = (target) => async (req, res) => {
         responseType: "stream",
         validateStatus: (status) => status < 500,
         maxRedirects: 0,
-        timeout: 10000, // 10 segundos por tentativa
+        timeout: 5000, // 5 segundos por tentativa
       });
 
       res.status(response.status);

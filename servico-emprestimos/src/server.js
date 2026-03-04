@@ -11,22 +11,11 @@ app.use(express.json());
 app.use(cors());
 
 app.get(["/health", "/emprestimos/health", "/reservas/health"], (req, res) => {
-  const db = getDatabase();
-  db.query("SELECT 1")
-    .then(() =>
-      res.json({
-        status: "healthy",
-        service: process.env.RENDER_SERVICE_NAME || "unknown",
-        database: "connected",
-        timestamp: new Date().toISOString(),
-      }),
-    )
-    .catch(() =>
-      res.status(500).json({
-        status: "unhealthy",
-        error: "databse connection failed",
-      }),
-    );
+  res.json({
+    status: "healthy",
+    service: process.env.RENDER_SERVICE_NAME || "known",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.use("/emprestimos", emprestimosRoutes);

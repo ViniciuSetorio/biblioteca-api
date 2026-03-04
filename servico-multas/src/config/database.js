@@ -31,7 +31,7 @@ function createPool() {
         rejectUnauthorized: false,
       },
       // Timeouts para evitar conexões pendentes
-      connectionTimeoutMillis: 10000,
+      connectionTimeoutMillis: 5000,
       idleTimeoutMillis: 30000,
     });
   }
