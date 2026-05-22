@@ -1,8 +1,11 @@
 import {
+  BadRequestError,
   ConflictError,
   NotFoundError,
   UnprocessableEntityError,
 } from "../utils/httpError.js";
+
+const VALID_CARGOS = ["bibliotecario", "membro"];
 
 export default function createUsuariosService(db) {
   async function buscarUsuarios() {
@@ -26,6 +29,13 @@ export default function createUsuariosService(db) {
   }
 
   async function criarUsuario({ nome, email, cargo }) {
+    if (!VALID_CARGOS.includes(cargo)) {
+      throw BadRequestError(
+        "Cargo inválido. Deve ser 'bibliotecario' ou 'membro'",
+        "INVALID_ROLE",
+      );
+    }
+
     try {
       const { rows } = await db.query(
         `INSERT INTO usuarios (nome, email, cargo)

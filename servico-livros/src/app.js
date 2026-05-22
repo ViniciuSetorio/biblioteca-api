@@ -9,7 +9,7 @@ export function createApp(db) {
   app.use(express.json());
   app.use(cors());
 
-  app.get(["/health", "/livros/health"], (req, res) => {
+  app.get(["/health", "/livros/health"], (_req, res) => {
     res.json({
       status: "healthy",
       service: "livros-service",
@@ -21,7 +21,7 @@ export function createApp(db) {
 
   const router = express.Router();
 
-  router.get("/", async (req, res) => {
+  router.get("/", async (_req, res) => {
     try {
       const livros = await livroService.buscarLivros();
       return res.status(200).json(livros);
