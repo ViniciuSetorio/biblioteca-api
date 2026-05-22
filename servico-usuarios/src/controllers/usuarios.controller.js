@@ -1,13 +1,8 @@
-import createUsuariosService from "../services/usuarios.service.js";
-import getDatabase from "../config/database.js";
 import { InternalServerError, NotFoundError } from "../utils/httpError.js";
 
-const db = getDatabase();
-const usuariosService = createUsuariosService(db);
-
-async function pegarTodosOsUsuarios(_req, res) {
+async function pegarTodosOsUsuarios(req, res) {
   try {
-    const usuarios = await usuariosService.buscarUsuarios();
+    const usuarios = await req.usuariosService.buscarUsuarios();
     return res.status(200).json(usuarios);
   } catch (err) {
     if (err.statusCode) {
@@ -25,12 +20,12 @@ async function pegarUsuarioPorId(req, res) {
   try {
     const { id } = req.params;
     const numericId = Number(id);
-    if (isNaN(numericId)) {
+    if (Number.isNaN(numericId)) {
       return res
         .status(400)
         .json({ message: "ID de usuário inválido", code: "INVALID_ID" });
     }
-    const usuario = await usuariosService.buscarUsuarioPorId(numericId);
+    const usuario = await req.usuariosService.buscarUsuarioPorId(numericId);
 
     if (!usuario) {
       const error = NotFoundError("Usuário não encontrado", "USER_NOT_FOUND");
@@ -52,7 +47,7 @@ async function pegarUsuarioPorId(req, res) {
 
 async function adicionarUsuario(req, res) {
   try {
-    const usuario = await usuariosService.criarUsuario(req.body);
+    const usuario = await req.usuariosService.criarUsuario(req.body);
     return res.status(201).json(usuario);
   } catch (err) {
     if (err.statusCode) {
@@ -68,12 +63,12 @@ async function atualizarUsuario(req, res) {
   try {
     const { id } = req.params;
     const numericId = Number(id);
-    if (isNaN(numericId)) {
+    if (Number.isNaN(numericId)) {
       return res
         .status(400)
         .json({ message: "ID de usuário inválido", code: "INVALID_ID" });
     }
-    const usuario = await usuariosService.modificarUsuario(numericId, req.body);
+    const usuario = await req.usuariosService.modificarUsuario(numericId, req.body);
     return res.status(200).json(usuario);
   } catch (err) {
     if (err.statusCode) {
@@ -89,12 +84,12 @@ async function deletarUsuario(req, res) {
   try {
     const { id } = req.params;
     const numericId = Number(id);
-    if (isNaN(numericId)) {
+    if (Number.isNaN(numericId)) {
       return res
         .status(400)
         .json({ message: "ID de usuário inválido", code: "INVALID_ID" });
     }
-    const usuario = await usuariosService.removerUsuario(numericId);
+    const usuario = await req.usuariosService.removerUsuario(numericId);
     return res.status(200).json(usuario);
   } catch (err) {
     if (err.statusCode) {
