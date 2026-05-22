@@ -1,25 +1,8 @@
-import express from "express";
-import cors from "cors";
 import getDatabase from "./config/database.js";
-import livrosRoutes from "./routes/livros.routes.js";
-import { errorHandler } from "./middleware/errorHandler.js";
+import { createApp } from "./app.js";
 
-const app = express();
-
-app.use(express.json());
-app.use(cors());
-
-app.get(["/health", "/livros/health"], (req, res) => {
-  res.json({
-    status: "healthy",
-    service: process.env.RENDER_SERVICE_NAME || "livros-service",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.use("/livros", livrosRoutes);
-
-app.use(errorHandler);
+const db = getDatabase();
+const app = createApp(db);
 
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, "0.0.0.0", () => {
