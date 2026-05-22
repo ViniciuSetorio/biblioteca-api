@@ -39,22 +39,13 @@ async function adicionarLivro(req, res) {
     const livro = await livroService.criarLivro(req.body);
     return res.status(201).json(livro);
   } catch (err) {
-    console.error("Erro ao adicionar livro:", {
-      message: err.message,
-      code: err.code,
-      detail: err.detail, // Postgres error detail
-      body: req.body,
-    });
-
+    // Se o erro já foi normalizado pelo serviço, retorne sem logar (esperado)
     if (err.statusCode) {
-      return res
-        .status(err.statusCode)
-        .json({ message: err.message, code: err.code });
+      return res.status(err.statusCode).json({ message: err.message, code: err.code });
     }
 
-    // Erros específicos do PostgreSQL
+    // Erros específicos do PostgreSQL (esperados) — não logamos para não poluir o stderr
     if (err.code === "23505") {
-      // Unique violation (ex: ISBN)
       return res.status(409).json({
         message: "Já existe um livro cadastrado com este ISBN.",
         code: "DUPLICATE_ISBN",
@@ -62,17 +53,22 @@ async function adicionarLivro(req, res) {
     }
 
     if (err.code === "23502") {
-      // Not null violation
       return res.status(400).json({
         message: "Campos obrigatórios estão faltando.",
         code: "MISSING_FIELDS",
       });
     }
 
+    // Log apenas erros inesperados para facilitar debugging
+    console.error("Erro ao adicionar livro:", {
+      message: err.message,
+      code: err.code,
+      detail: err.detail,
+      body: req.body,
+    });
+
     const error = InternalServerError("Erro ao criar livro", "INTERNAL_ERROR");
-    return res
-      .status(error.statusCode)
-      .json({ message: error.message, code: error.code });
+    return res.status(error.statusCode).json({ message: error.message, code: error.code });
   }
 }
 

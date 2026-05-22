@@ -50,13 +50,6 @@ export function createApp(db) {
       const livro = await livroService.criarLivro(req.body);
       return res.status(201).json(livro);
     } catch (err) {
-      console.error("Erro ao adicionar livro:", {
-        message: err.message,
-        code: err.code,
-        detail: err.detail,
-        body: req.body,
-      });
-
       if (err.statusCode) {
         return res.status(err.statusCode).json({ message: err.message, code: err.code });
       }
@@ -74,6 +67,13 @@ export function createApp(db) {
           code: "MISSING_FIELDS",
         });
       }
+
+      console.error("Erro ao adicionar livro:", {
+        message: err.message,
+        code: err.code,
+        detail: err.detail,
+        body: req.body,
+      });
 
       return res.status(500).json({ message: "Erro ao criar livro", code: "INTERNAL_ERROR" });
     }
