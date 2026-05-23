@@ -7,10 +7,10 @@ import {
 
 let instance;
 
-export function createLibraryManager() {
-  if (instance) return instance;
+export function createLibraryManager(dbOverride) {
+  if (instance && !dbOverride) return instance;
 
-  const db = getDatabase();
+  const db = dbOverride || getDatabase();
 
   instance = {
     async emprestarLivro({ usuarioId, livroId }) {
@@ -221,6 +221,12 @@ export function createLibraryManager() {
           throw NotFoundError("Livro não encontrado", "BOOK_NOT_FOUND");
         }
 
+        const livro = await livroResponse.json();
+
+        if (livro.copias_disponiveis > 0) {
+          throw ConflictError("Livro disponível para empréstimo, não necessita reserva", "BOOK_AVAILABLE");
+        }
+
         const dataExpiracao = new Date();
         dataExpiracao.setDate(dataExpiracao.getDate() + 2);
 
@@ -278,4 +284,8 @@ export function createLibraryManager() {
   };
 
   return instance;
+}
+
+export function resetLibraryManager() {
+  instance = undefined;
 }

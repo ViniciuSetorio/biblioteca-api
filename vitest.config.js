@@ -13,5 +13,7 @@ export default defineConfig({
     },
     include: ['tests/**/*.test.js'],
     setupFiles: ['tests/setup/test-environment.js'],
+    pool: 'forks',
+    fileParallelism: false,
   },
 });

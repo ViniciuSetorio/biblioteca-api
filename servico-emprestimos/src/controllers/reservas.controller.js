@@ -2,11 +2,6 @@ import { createLibraryManager } from "../core/libraryManager.js";
 import { InternalServerError } from "../utils/httpError.js";
 import { z } from "zod";
 import createReservasService from "../services/reservas.service.js";
-import getDatabase from "../config/database.js";
-
-const LibraryManager = createLibraryManager();
-const db = getDatabase();
-const reservasService = createReservasService(db);
 
 const CriarReservaSchema = z.object({
   usuarioId: z.number().int().positive(),
@@ -23,10 +18,21 @@ const ListarReservasQuerySchema = z.object({
   livroId: z.coerce.number().int().positive().optional(),
 });
 
+function getLibraryManager(req) {
+  const db = req.app.locals.db;
+  return createLibraryManager(db);
+}
+
+function getReservasService(req) {
+  const db = req.app.locals.db;
+  return createReservasService(db);
+}
+
 async function criarReserva(req, res) {
   try {
     const data = CriarReservaSchema.parse(req.body);
-    const reserva = await LibraryManager.criarReserva(data);
+    const libraryManager = getLibraryManager(req);
+    const reserva = await libraryManager.criarReserva(data);
     return res.status(201).json(reserva);
   } catch (err) {
     if (err.statusCode) {
@@ -41,6 +47,7 @@ async function criarReserva(req, res) {
 async function listarReservas(req, res) {
   try {
     const filters = ListarReservasQuerySchema.parse(req.query);
+    const reservasService = getReservasService(req);
     const reservas = await reservasService.listarReservas(filters);
     return res.status(200).json(reservas);
   } catch (err) {
@@ -53,6 +60,7 @@ async function listarReservas(req, res) {
 async function obterReserva(req, res) {
   try {
     const { reservaId } = ReservaIdParamsSchema.parse(req.params);
+    const reservasService = getReservasService(req);
     const reserva = await reservasService.buscarReservaPorId(reservaId);
     return res.status(200).json(reserva);
   } catch (err) {
@@ -68,7 +76,8 @@ async function obterReserva(req, res) {
 async function cancelarReserva(req, res) {
   try {
     const { reservaId } = ReservaIdParamsSchema.parse(req.params);
-    const reserva = await LibraryManager.cancelarReserva({ reservaId });
+    const libraryManager = getLibraryManager(req);
+    const reserva = await libraryManager.cancelarReserva({ reservaId });
     return res.status(200).json(reserva);
   } catch (err) {
     if (err.statusCode) {

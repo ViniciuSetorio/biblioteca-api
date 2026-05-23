@@ -2,8 +2,6 @@ import { createLibraryManager } from "../core/libraryManager.js";
 import { InternalServerError } from "../utils/httpError.js";
 import { z } from "zod";
 
-const LibraryManager = createLibraryManager();
-
 const EmprestarBodySchema = z.object({
   usuarioId: z.number().int().positive(),
   livroId: z.number().int().positive(),
@@ -19,10 +17,16 @@ const ListarQuerySchema = z.object({
   livroId: z.coerce.number().int().positive().optional(),
 });
 
+function getLibraryManager(req) {
+  const db = req.app.locals.db;
+  return createLibraryManager(db);
+}
+
 async function criarEmprestimo(req, res) {
   try {
     const data = EmprestarBodySchema.parse(req.body);
-    const emprestimo = await LibraryManager.emprestarLivro(data);
+    const libraryManager = getLibraryManager(req);
+    const emprestimo = await libraryManager.emprestarLivro(data);
     return res.status(201).json(emprestimo);
   } catch (err) {
     if (err.statusCode) {
@@ -37,7 +41,8 @@ async function criarEmprestimo(req, res) {
 async function devolverLivro(req, res) {
   try {
     const { emprestimoId } = EmprestimoIdParamsSchema.parse(req.params);
-    const devolucao = await LibraryManager.devolverLivro({ emprestimoId });
+    const libraryManager = getLibraryManager(req);
+    const devolucao = await libraryManager.devolverLivro({ emprestimoId });
     return res.status(200).json(devolucao);
   } catch (err) {
     if (err.statusCode) {
@@ -52,7 +57,8 @@ async function devolverLivro(req, res) {
 async function listarEmprestimos(req, res) {
   try {
     const filters = ListarQuerySchema.parse(req.query);
-    const lista = await LibraryManager.listarEmprestimos(filters);
+    const libraryManager = getLibraryManager(req);
+    const lista = await libraryManager.listarEmprestimos(filters);
     return res.status(200).json(lista);
   } catch (err) {
     console.error(err);
@@ -64,7 +70,8 @@ async function listarEmprestimos(req, res) {
 async function obterEmprestimo(req, res) {
   try {
     const { emprestimoId } = EmprestimoIdParamsSchema.parse(req.params);
-    const emprestimo = await LibraryManager.obterEmprestimo({ emprestimoId });
+    const libraryManager = getLibraryManager(req);
+    const emprestimo = await libraryManager.obterEmprestimo({ emprestimoId });
     return res.status(200).json(emprestimo);
   } catch (err) {
     if (err.statusCode) {
