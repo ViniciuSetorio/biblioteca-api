@@ -107,10 +107,63 @@ export default function createMultasService(db) {
     }
   }
 
+  async function atualizarMulta(multaId, data) {
+    const { rows, rowCount } = await db.query(
+      "SELECT * FROM multas WHERE id = $1",
+      [multaId],
+    );
+
+    if (rowCount === 0) {
+      throw NotFoundError("Multa não encontrada", "FINE_NOT_FOUND");
+    }
+
+    const updates = [];
+    const params = [];
+    let idx = 1;
+
+    if (data.emprestimoId !== undefined) {
+      updates.push("emprestimos_id = $" + idx++);
+      params.push(data.emprestimoId);
+    }
+    if (data.valor !== undefined) {
+      updates.push("valor = $" + idx++);
+      params.push(data.valor);
+    }
+    if (data.pago !== undefined) {
+      updates.push("pago = $" + idx++);
+      params.push(data.pago);
+    }
+
+    if (updates.length === 0) {
+      throw NotFoundError("Nenhum campo fornecido para atualização", "NO_FIELDS_PROVIDED");
+    }
+
+    params.push(multaId);
+    const { rows: updated } = await db.query(
+      "UPDATE multas SET " + updates.join(", ") + " WHERE id = $" + idx + " RETURNING *",
+      params,
+    );
+
+    return updated[0];
+  }
+
+  async function deletarMulta(multaId) {
+    const { rowCount } = await db.query(
+      "DELETE FROM multas WHERE id = $1",
+      [multaId],
+    );
+
+    if (rowCount === 0) {
+      throw NotFoundError("Multa não encontrada", "FINE_NOT_FOUND");
+    }
+  }
+
   return {
     listarMultas,
     buscarMultaPorId,
     criarMulta,
     pagarMulta,
+    atualizarMulta,
+    deletarMulta,
   };
 }

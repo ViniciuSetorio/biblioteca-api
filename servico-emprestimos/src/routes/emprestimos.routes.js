@@ -7,5 +7,7 @@ router.post("/", emprestimosController.criarEmprestimo);
 router.patch("/:emprestimoId/devolucao", emprestimosController.devolverLivro);
 router.get("/", emprestimosController.listarEmprestimos);
 router.get("/:emprestimoId", emprestimosController.obterEmprestimo);
+router.put("/:emprestimoId", emprestimosController.atualizarEmprestimo);
+router.delete("/:emprestimoId", emprestimosController.deletarEmprestimo);
 
 export default router;

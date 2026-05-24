@@ -199,6 +199,61 @@ export function createLibraryManager(dbOverride) {
       return rows;
     },
 
+    async atualizarEmprestimo({ emprestimoId, usuarioId, livroId, status, data_prevista_devolucao }) {
+      const { rows, rowCount } = await db.query(
+        "SELECT * FROM emprestimos WHERE id = $1",
+        [emprestimoId],
+      );
+
+      if (rowCount === 0) {
+        throw NotFoundError("Empréstimo não encontrado", "LOAN_NOT_FOUND");
+      }
+
+      const updates = [];
+      const params = [];
+      let idx = 1;
+
+      if (usuarioId !== undefined) {
+        updates.push("usuario_id = $" + idx++);
+        params.push(usuarioId);
+      }
+      if (livroId !== undefined) {
+        updates.push("livro_id = $" + idx++);
+        params.push(livroId);
+      }
+      if (status !== undefined) {
+        updates.push("status = $" + idx++);
+        params.push(status);
+      }
+      if (data_prevista_devolucao !== undefined) {
+        updates.push("data_prevista_devolucao = $" + idx++);
+        params.push(data_prevista_devolucao);
+      }
+
+      if (updates.length === 0) {
+        throw UnprocessableEntityError("Nenhum campo fornecido para atualização", "NO_FIELDS_PROVIDED");
+      }
+
+      params.push(emprestimoId);
+      const { rows: updated } = await db.query(
+        "UPDATE emprestimos SET " + updates.join(", ") + " WHERE id = $" + idx + " RETURNING *",
+        params,
+      );
+
+      return updated[0];
+    },
+
+    async deletarEmprestimo({ emprestimoId }) {
+      const { rowCount } = await db.query(
+        "DELETE FROM emprestimos WHERE id = $1",
+        [emprestimoId],
+      );
+
+      if (rowCount === 0) {
+        throw NotFoundError("Empréstimo não encontrado", "LOAN_NOT_FOUND");
+      }
+    },
+
     async criarReserva({ usuarioId, livroId }) {
       const client = await db.connect();
 
