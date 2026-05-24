@@ -53,7 +53,7 @@ export default function createUsuariosService(db) {
   }
 
   async function modificarUsuario(id, data) {
-    const usuarioAtual = await this.buscarUsuarioPorId(id);
+    const usuarioAtual = await buscarUsuarioPorId(id);
     if (!usuarioAtual) {
       throw NotFoundError("Usuário não encontrado", "USER_NOT_FOUND");
     }
