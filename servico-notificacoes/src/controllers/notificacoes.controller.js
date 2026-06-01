@@ -2,29 +2,48 @@ import notificacaoService from '../services/notificacao.service.js';
 import logger from '../config/logger.js';
 import { z } from 'zod';
 
+const normalizeKeysToCamel = (obj) => {
+  if (typeof obj !== "object" || obj === null) return obj;
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    result[camelKey] = value;
+  }
+  return result;
+};
+
 // Schema de validação
-const NotificacaoSchema = z.object({
-  tipo: z.enum(['emprestimo', 'devolucao', 'multa', 'reserva']),
-  usuarioId: z.number().int().positive(),
-  emprestimoId: z.number().int().positive().optional(),
-  dados: z.record(z.any()).optional(),
-  telefone: z.string().optional(),
-});
+const NotificacaoSchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z.object({
+    tipo: z.enum(["emprestimo", "devolucao", "multa", "reserva"]),
+    usuarioId: z.number().int().positive(),
+    emprestimoId: z.number().int().positive().optional(),
+    dados: z.record(z.any()).optional(),
+    telefone: z.string().optional(),
+  }),
+);
 
-const EmailSchema = z.object({
-  tipo: z.enum(['emprestimo', 'devolucao', 'multa', 'reserva']),
-  usuarioId: z.number().int().positive(),
-  emprestimoId: z.number().int().positive().optional(),
-  dados: z.record(z.any()).optional(),
-});
+const EmailSchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z.object({
+    tipo: z.enum(["emprestimo", "devolucao", "multa", "reserva"]),
+    usuarioId: z.number().int().positive(),
+    emprestimoId: z.number().int().positive().optional(),
+    dados: z.record(z.any()).optional(),
+  }),
+);
 
-const SmsSchema = z.object({
-  tipo: z.enum(['emprestimo', 'devolucao', 'multa', 'reserva']),
-  usuarioId: z.number().int().positive(),
-  emprestimoId: z.number().int().positive().optional(),
-  telefone: z.string().min(10, 'Telefone é obrigatório para SMS'),
-  dados: z.record(z.any()).optional(),
-});
+const SmsSchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z.object({
+    tipo: z.enum(["emprestimo", "devolucao", "multa", "reserva"]),
+    usuarioId: z.number().int().positive(),
+    emprestimoId: z.number().int().positive().optional(),
+    telefone: z.string().min(10, "Telefone é obrigatório para SMS"),
+    dados: z.record(z.any()).optional(),
+  }),
+);
 
 async function enviarNotificacao(req, res) {
   try {

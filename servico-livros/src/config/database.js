@@ -10,20 +10,11 @@ function createPool() {
 
   const dbUrl = getEnvVar("DATABASE_URL") || getEnvVar("LIVROS_DB_URL");
 
-  // Configuração para produção (Neon/Render/Railway)
-  if (process.env.NODE_ENV === "production" || dbUrl) {
-    if (!dbUrl) {
-      console.warn(
-        "DATABASE_URL ou LIVROS_DB_URL não encontrados em ambiente de produção!",
-      );
-    } else {
-      const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ":****@");
-      console.log(`Configurando pool com URL: ${maskedUrl}`);
-    }
-
-    // ATENÇÃO: Se a URL existir, ignoramos COMPLETAMENTE as variáveis PG... do Render
-    const pgVars = ["PGHOST", "PGUSER", "PGDATABASE", "PGPASSWORD", "PGPORT"];
-    pgVars.forEach((v) => delete process.env[v]);
+  // Use DATABASE_URL apenas quando estiver disponível.
+  // Em ambiente Docker Compose local, ainda queremos respeitar PGHOST/PGDATABASE/PGPASSWORD/PGPORT.
+  if (dbUrl) {
+    const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ":****@");
+    console.log(`Configurando pool com URL: ${maskedUrl}`);
 
     return new Pool({
       connectionString: dbUrl,

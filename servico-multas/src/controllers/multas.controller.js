@@ -6,27 +6,47 @@ import { z } from "zod";
 const db = getDatabase();
 const multasService = createMultasService(db);
 
-const ListarMultasQuerySchema = z.object({
-  pago: z.coerce.boolean().optional(),
-  usuarioId: z.coerce.number().int().positive().optional(),
-});
+const normalizeKeysToCamel = (obj) => {
+  if (typeof obj !== "object" || obj === null) return obj;
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    result[camelKey] = value;
+  }
+  return result;
+};
+
+const ListarMultasQuerySchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z.object({
+    pago: z.coerce.boolean().optional(),
+    usuarioId: z.coerce.number().int().positive().optional(),
+  }),
+);
 
 const MultaIdParamsSchema = z.object({
   multaId: z.coerce.number().int().positive(),
 });
 
-const CriarMultaSchema = z.object({
-  emprestimoId: z.number().int().positive(),
-  valor: z.number().positive(),
-});
+const CriarMultaSchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z.object({
+    emprestimoId: z.number().int().positive(),
+    valor: z.number().positive(),
+  }),
+);
 
-const AtualizarMultaSchema = z.object({
-  emprestimoId: z.number().int().positive().optional(),
-  valor: z.number().positive().optional(),
-  pago: z.boolean().optional(),
-}).refine(
-  (data) => Object.keys(data).length > 0,
-  { message: "Pelo menos um campo deve ser fornecido para atualização" }
+const AtualizarMultaSchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z
+    .object({
+      emprestimoId: z.number().int().positive().optional(),
+      valor: z.number().positive().optional(),
+      pago: z.boolean().optional(),
+    })
+    .refine((data) => Object.keys(data).length > 0, {
+      message: "Pelo menos um campo deve ser fornecido para atualização",
+    }),
 );
 
 async function listarMultas(req, res) {

@@ -3,20 +3,36 @@ import { InternalServerError } from "../utils/httpError.js";
 import { z } from "zod";
 import createReservasService from "../services/reservas.service.js";
 
-const CriarReservaSchema = z.object({
-  usuarioId: z.number().int().positive(),
-  livroId: z.number().int().positive(),
-});
+const normalizeKeysToCamel = (obj) => {
+  if (typeof obj !== "object" || obj === null) return obj;
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    result[camelKey] = value;
+  }
+  return result;
+};
+
+const CriarReservaSchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z.object({
+    usuarioId: z.number().int().positive(),
+    livroId: z.number().int().positive(),
+  }),
+);
 
 const ReservaIdParamsSchema = z.object({
   reservaId: z.coerce.number().int().positive(),
 });
 
-const ListarReservasQuerySchema = z.object({
-  status: z.enum(["ativa", "cancelada", "expirada"]).optional(),
-  usuarioId: z.coerce.number().int().positive().optional(),
-  livroId: z.coerce.number().int().positive().optional(),
-});
+const ListarReservasQuerySchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z.object({
+    status: z.enum(["ativa", "cancelada", "expirada"]).optional(),
+    usuarioId: z.coerce.number().int().positive().optional(),
+    livroId: z.coerce.number().int().positive().optional(),
+  }),
+);
 
 function getLibraryManager(req) {
   const db = req.app.locals.db;

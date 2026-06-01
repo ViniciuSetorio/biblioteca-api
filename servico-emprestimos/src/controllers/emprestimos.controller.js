@@ -2,30 +2,51 @@ import { createLibraryManager } from "../core/libraryManager.js";
 import { InternalServerError } from "../utils/httpError.js";
 import { z } from "zod";
 
-const EmprestarBodySchema = z.object({
-  usuarioId: z.number().int().positive(),
-  livroId: z.number().int().positive(),
-});
+// Helper para converter snake_case para camelCase
+const normalizeKeysToCamel = (obj) => {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    result[camelKey] = value;
+  }
+  return result;
+};
+
+const EmprestarBodySchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z.object({
+    usuarioId: z.number().int().positive(),
+    livroId: z.number().int().positive(),
+  }),
+);
 
 const EmprestimoIdParamsSchema = z.object({
   emprestimoId: z.coerce.number().int().positive(),
 });
 
-const AtualizarEmprestimoSchema = z.object({
-  usuarioId: z.number().int().positive().optional(),
-  livroId: z.number().int().positive().optional(),
-  status: z.enum(["ativo", "devolvido"]).optional(),
-  data_prevista_devolucao: z.string().datetime().optional(),
-}).refine(
-  (data) => Object.keys(data).length > 0,
-  { message: "Pelo menos um campo deve ser fornecido para atualização" }
+const AtualizarEmprestimoSchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z
+    .object({
+      usuarioId: z.number().int().positive().optional(),
+      livroId: z.number().int().positive().optional(),
+      status: z.enum(["ativo", "devolvido"]).optional(),
+      data_prevista_devolucao: z.string().datetime().optional(),
+    })
+    .refine((data) => Object.keys(data).length > 0, {
+      message: "Pelo menos um campo deve ser fornecido para atualização",
+    }),
 );
 
-const ListarQuerySchema = z.object({
-  status: z.enum(["ativo", "devolvido"]).optional(),
-  usuarioId: z.coerce.number().int().positive().optional(),
-  livroId: z.coerce.number().int().positive().optional(),
-});
+const ListarQuerySchema = z.preprocess(
+  (data) => normalizeKeysToCamel(data),
+  z.object({
+    status: z.enum(["ativo", "devolvido"]).optional(),
+    usuarioId: z.coerce.number().int().positive().optional(),
+    livroId: z.coerce.number().int().positive().optional(),
+  }),
+);
 
 function getLibraryManager(req) {
   const db = req.app.locals.db;
